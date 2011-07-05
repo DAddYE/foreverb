@@ -36,7 +36,7 @@ module Forever
     exit if ARGV[0] == "stop"
 
     fork do
-      $0 = "Worker: #{name}"
+      $0 = "Forever: #{name}"
       puts "=> Process daemonized with pid #{Process.pid}"
 
       require 'rubygems'

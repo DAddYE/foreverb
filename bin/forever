@@ -1,0 +1,31 @@
+#!/usr/bin/ruby
+require 'rubygems' unless defined?(Gem)
+require File.expand_path('../../lib/forever/version.rb', __FILE__)
+require 'thor'
+
+class CLI < Thor
+  desc "list", "List Forever daemons"
+  def list
+    say "PID\tDAEMON", :green
+    puts daemons.join("\n")
+  end
+
+  desc "stop [DAEMON]", "Stop a specified daemon"
+  def stop(daemon)
+    if found = daemons.find { |d| d=~/#{daemon}/i }
+      if yes? "Do you want really stop #{found.split("\t")[-1]}?"
+        say `kill #{found.split("\t")[0]}`, :yellow
+      end
+    else
+      say "Daemon '#{daemon}' not found", :red
+    end
+  end
+
+  private
+    def daemons
+      `ps -ef | grep -vE "^USER|grep" | grep Forever: | awk '{print $2"\t"$9}'`.chomp.split("\n")
+    end
+end
+
+ARGV << "-h" if ARGV.empty?
+CLI.start(ARGV)

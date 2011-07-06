@@ -6,24 +6,27 @@ require 'thor'
 class CLI < Thor
   desc "list", "List Forever daemons"
   def list
-    say "PID\tDAEMON", :green
+    say "PID\tRSS\tCPU\tCMD", :green
     puts daemons.join("\n")
   end
 
   desc "stop [DAEMON]", "Stop a specified daemon"
   def stop(daemon)
-    if found = daemons.find { |d| d=~/#{daemon}/i }
-      if yes? "Do you want really stop #{found.split("\t")[-1]}?"
-        say `kill #{found.split("\t")[0]}`, :yellow
+    found = daemons.find_all { |d| d=~/#{daemon}/i }
+    say "Daemon(s) matching '#{daemon}' not found", :red if found.empty?
+    found.each do |daemon|
+      daemon = daemon.split("\t")
+      if yes? "Do you want really stop #{daemon[-1]} with pid #{daemon[0]}?"
+        say "Killing process #{daemon[-1]} with pid #{daemon[0]}...", :green
+        result = `kill #{daemon[0]}`.strip
+        say result, :red if result != ""
       end
-    else
-      say "Daemon '#{daemon}' not found", :red
     end
   end
 
   private
     def daemons
-      `ps -ef | grep -vE "^USER|grep" | grep Forever: | awk '{print $2"\t"$9}'`.chomp.split("\n")
+      `ps axo pid,rss,pcpu,command | grep -vE "^USER|grep" | grep Forever: | awk '{print $1"\t"$2"\t"$3"\t"$4" "$5" "$6}'`.chomp.split("\n")
     end
 end
 

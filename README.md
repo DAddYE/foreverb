@@ -20,6 +20,12 @@ As like [sinatra](https://github.com/sinatra/sinatra) and [padrino](https://gith
 
 So, if you have my needs, **Forever** can be the right choice for you.
 
+## Install:
+
+``` sh
+$ gem install forever
+```
+
 ## Deamon Example:
 
 Place your script under your standard directory, generally on my env is _bin_ or _scripts_.
@@ -87,7 +93,7 @@ $ bin/foo stop
 => Killing process 19538...
 ```
 
-## Monitor your daemons
+## Monitor your daemon(s):
 
 List daemons:
 

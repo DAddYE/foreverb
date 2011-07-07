@@ -80,14 +80,14 @@ $ bin/foo
 
 you should see an output like:
 
-```
+``` sh
 $ bin/foo
 => Process demonized with pid 19538
 ```
 
 you can stop it:
 
-```
+``` sh
 $ bin/foo stop
 => Found pid 19538...
 => Killing process 19538...
@@ -97,7 +97,7 @@ $ bin/foo stop
 
 List daemons:
 
-```
+``` sh
 $ forever list
 PID     RSS     CPU   CMD
 19838   32512   1.6   Forever: bin/githubwatcher
@@ -105,7 +105,7 @@ PID     RSS     CPU   CMD
 
 Stop daemon(s):
 
-```
+``` sh
 $ forever stop foo
 Do you want really stop Forever: bin/foo  with pid 19538? y
 Killing process Forever: bin/foo  with pid 19538...

@@ -15,8 +15,8 @@ In my servers I've several daemons and what I need is:
 As like [sinatra](https://github.com/sinatra/sinatra) and [padrino](https://github.com/padrino/padrino-framework) I need a
 **thin** framework to do these jobs in few seconds. This mean that:
 
-1) I can create a new job quickly
-2) I can watch, start, stop it quickly
+* I can create a new job quickly
+* I can watch, start, stop it quickly
 
 So, if you have my needs, **Forever** can be the right choice for you.
 

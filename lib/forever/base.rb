@@ -23,7 +23,7 @@ module Forever
 
         File.open(pid, "w") { |f| f.write(Process.pid.to_s) }
 
-        stream      = exists?(log) ? File.new(log, "w") : '/dev/null'
+        stream      = log ? File.new(log, "w") : File.open('/dev/null', 'w')
         stream.sync = true
 
         STDOUT.reopen(stream)

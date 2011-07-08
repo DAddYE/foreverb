@@ -1,4 +1,5 @@
 require "forever/base"
+require "forever/version"
 
 module Forever
   extend self

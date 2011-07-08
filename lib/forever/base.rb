@@ -17,7 +17,7 @@ module Forever
 
       fork do
         $0 = "Forever: #{$0}"
-        puts "=> Process demonized with pid #{Process.pid}"
+        puts "=> Process demonized with pid #{Process.pid} with Forever v.#{Forever::VERSION}"
 
         %w(INT TERM KILL).each { |signal| trap(signal)  { stop! } }
 

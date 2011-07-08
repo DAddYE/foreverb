@@ -2,7 +2,7 @@
 
 Small daemon framework **for ruby**, with logging, error handler watcher and much more.
 
-The idea of the name and some concepts was taken by [forever for node.js](https://raw.github.com/indexzero/forever) written by Charlie Robbins.
+My inspiration was [forever for node.js](https://raw.github.com/indexzero/forever) written by Charlie Robbins.
 
 Please don't consider this gem as a port because is not.
 
@@ -29,7 +29,7 @@ So, if you have my needs, **Forever** can be the right choice for you.
 ## Install:
 
 ``` sh
-$ gem install forever
+$ gem install foreverb
 ```
 
 ## Deamon Example:

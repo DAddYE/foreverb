@@ -104,7 +104,7 @@ $ bin/foo stop
 List daemons:
 
 ``` sh
-$ forever list
+$ foreverb list
 PID     RSS     CPU   CMD
 19838   32512   1.6   Forever: bin/githubwatcher
 ```
@@ -112,7 +112,7 @@ PID     RSS     CPU   CMD
 Stop daemon(s):
 
 ``` sh
-$ forever stop foo
+$ foreverb stop foo
 Do you want really stop Forever: bin/foo  with pid 19538? y
 Killing process Forever: bin/foo  with pid 19538...
 ```

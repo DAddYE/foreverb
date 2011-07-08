@@ -3,7 +3,7 @@ $:.push File.expand_path("../lib", __FILE__)
 require "forever/version"
 
 Gem::Specification.new do |s|
-  s.name        = "forever"
+  s.name        = "foreverb"
   s.version     = Forever::VERSION
   s.authors     = ["DAddYE"]
   s.email       = ["d.dagostino@lipsiasoft.com"]

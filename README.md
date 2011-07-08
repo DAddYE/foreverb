@@ -1,4 +1,4 @@
-# Ruby Forever
+# Foreverb
 
 Small daemon framework **for ruby**, with logging, error handler watcher and much more.
 

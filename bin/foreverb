@@ -18,7 +18,7 @@ class CLI < Thor
       daemon = daemon.split("\t")
       if yes? "Do you want really stop #{daemon[-1]} with pid #{daemon[0]}?"
         say "Killing process #{daemon[-1]} with pid #{daemon[0]}...", :green
-        result = `kill #{daemon[0]}`.strip
+        result = `kill -9 #{daemon[0]}`.strip
         say result, :red if result != ""
       end
     end

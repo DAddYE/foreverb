@@ -30,7 +30,7 @@ module Forever
         STDERR.reopen(STDOUT)
 
         begin
-          on_ready.call
+          on_ready.call if on_ready
         rescue Exception => e
           Thread.list.reject { |t| t==Thread.current }.map(&:kill)
           on_error[e] if on_error
@@ -105,7 +105,7 @@ module Forever
     # Callback to fire when the daemon start
     #
     def on_ready(&block)
-      block_given? ? @_on_error = block : @_on_error
+      block_given? ? @_on_ready = block : @_on_ready
     end
 
     def to_s

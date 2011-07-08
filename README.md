@@ -119,6 +119,10 @@ Killing process Forever: bin/foo  with pid 19538...
 
 That's all!
 
+## Extras
+
+To see a most comprensive app running _foreverb_ + _growl_ see [githubwatcher gem](https://github.com/daddye/githubwatcher)
+
 ## Author
 
 DAddYE, you can follow me on twitter [@daddye](http://twitter.com/daddye)

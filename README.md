@@ -2,7 +2,7 @@
 
 Small daemon framework **for ruby**, with logging, error handler watcher and much more.
 
-The idea of the name and some concept was taken by [forever for node.js](https://raw.github.com/indexzero/forever) written by Charlie Robbins.
+The idea of the name and some concepts was taken by [forever for node.js](https://raw.github.com/indexzero/forever) written by Charlie Robbins.
 
 ## Why?
 

@@ -4,6 +4,8 @@ require File.expand_path('../../lib/forever/version.rb', __FILE__)
 require 'thor'
 
 class CLI < Thor
+
+
   desc "list", "List Forever daemons"
   def list
     say "PID\tRSS\tCPU\tCMD", :green
@@ -22,6 +24,12 @@ class CLI < Thor
         say result, :red if result != ""
       end
     end
+  end
+
+  map "--version" => :version
+  desc "version", "show the version number"
+  def version
+    say "Foreverb v.#{Forever::VERSION}", :green
   end
 
   private

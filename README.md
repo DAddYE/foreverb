@@ -118,3 +118,7 @@ Killing process Forever: bin/foo  with pid 19538...
 ```
 
 That's all!
+
+## Author
+
+DAddYE, you can follow me on twitter [@daddye](http://twitter.com/daddye)

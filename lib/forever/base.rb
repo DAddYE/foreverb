@@ -6,8 +6,8 @@ module Forever
       options.each { |k,v| send(k, v) }
 
       Dir.chdir(dir) if exists?(dir)
-      FileUtils.mkdir(File.dirname(log), :noop => true) if exists?(log)
-      FileUtils.mkdir(File.dirname(pid), :noop => true) if exists?(pid)
+      Dir.mkdir(File.dirname(log)) if log && !File.exist?(File.dirname(log))
+      Dir.mkdir(File.dirname(pid)) if pid && !File.exist?(File.dirname(pid))
 
       instance_eval(&block)
 

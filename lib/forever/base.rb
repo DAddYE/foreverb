@@ -1,7 +1,12 @@
 require 'fileutils'
+require 'forever/every'
 
 module Forever
+  DATE_FORMAT = "%d/%m %H:%M:%S"
+
   class Base
+    include Every
+
     def initialize(options={}, &block)
       options.each { |k,v| send(k, v) }
 
@@ -13,11 +18,11 @@ module Forever
 
       stop!
 
-      return if ARGV[0] == "stop" || on_ready.nil?
+      return if ARGV[0] == "stop"
 
       fork do
         $0 = "Forever: #{$0}"
-        puts "=> Process demonized with pid #{Process.pid} with Forever v.#{Forever::VERSION}"
+        print "=> Process demonized with pid #{Process.pid} with Forever v.#{Forever::VERSION}\n"
 
         %w(INT TERM KILL).each { |signal| trap(signal)  { stop! } }
 
@@ -29,16 +34,35 @@ module Forever
         STDOUT.reopen(stream)
         STDERR.reopen(STDOUT)
 
+        Thread.abort_on_exception = true
+
         begin
-          on_ready.call if on_ready
+          threads = []
+          threads << Thread.new { on_ready.call } if on_ready
+          jobs.each do |job|
+            threads << Thread.new do
+              loop { job.call if job.time?(Time.now); sleep 1 }
+            end
+          end
+          threads.map(&:join)
         rescue Exception => e
-          Thread.list.reject { |t| t==Thread.current }.map(&:kill)
           on_error[e] if on_error
           stream.print "\n\n%s\n  %s\n\n" % [e.message, e.backtrace.join("\n  ")]
           sleep 30
           retry
         end
       end
+    end
+
+    ##
+    # A replacement of puts that has the aim to works correclty with multiple threads
+    # and log date. If you want to personalize date, edit DATE_FORMAT.
+    #
+    def puts(text="")
+      text  = "[%s] %s" % [Time.now.strftime(DATE_FORMAT), text.to_s]
+      text += "\n" unless text[-1] == ?\n
+      print text; $stdout.flush
+      text
     end
 
     ##
@@ -62,7 +86,7 @@ module Forever
     #
     def log(value=nil)
       @_log ||= File.join(dir, "log/#{File.basename(file)}.log") if exists?(dir, file)
-      value ? @_log = value : @_log
+      value.nil? ? @_log : @_log = value
     end
 
     ##
@@ -72,25 +96,26 @@ module Forever
     #
     def pid(value=nil)
       @_pid ||= File.join(dir, "tmp/#{File.basename(file)}.pid") if exists?(dir, file)
-      value ? @_pid = value : @_pid
+      value.nil? ? @_pid : @_pid = value
     end
 
     ##
     # Search if there is a running process and stop it
     #
-    def stop!(kill=true)
+    def stop!
       if exists?(pid)
         _pid = File.read(pid).to_i
-        puts "=> Found pid #{_pid}..."
+        print "=> Found pid #{_pid}...\n"
         FileUtils.rm_f(pid)
         begin
-          puts "=> Killing process #{_pid}..."
+          print "=> Killing process #{_pid}...\n"
+          on_exit.call if on_exit
           Process.kill(:KILL, _pid)
         rescue Errno::ESRCH => e
           puts "=> #{e.message}"
         end
       else
-        puts "=> Pid not found, process seems don't exist!"
+        print "=> Pid not found, process seems don't exist!\n"
       end
     end
 
@@ -102,6 +127,13 @@ module Forever
     end
 
     ##
+    # Callback raised when at exit
+    #
+    def on_exit(&block)
+      block_given? ? @_on_exit = block : @_on_exit
+    end
+
+    ##
     # Callback to fire when the daemon start
     #
     def on_ready(&block)
@@ -109,7 +141,7 @@ module Forever
     end
 
     def to_s
-      "#<Forever dir:#{dir}, file:#{file}, log:#{log}, pid:#{pid}>"
+      "#<Forever dir:#{dir}, file:#{file}, log:#{log}, pid:#{pid} jobs:#{jobs.size}>"
     end
     alias :inspect :to_s
 

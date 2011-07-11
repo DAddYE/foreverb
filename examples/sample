@@ -1,0 +1,44 @@
+#!/usr/bin/ruby
+require 'rubygems' unless defined?(Gem)
+require 'bundler/setup'
+require 'forever'
+
+$stdout_was = STDOUT.dup
+
+Forever.run do
+  def puts(text=nil)
+    text = super(text)
+    $stdout_was.print text
+  end
+
+  dir File.expand_path('../', __FILE__) # Default is ../../__FILE__
+
+  on_ready do
+    puts inspect
+  end
+
+  every 1.seconds do
+    puts "Every one seconds"
+  end
+
+  every 2.seconds do
+    puts "Every two seconds"
+  end
+
+  every 3.seconds do
+    puts "Every three seconds, long task"
+    sleep 10
+  end
+
+  every 1.minutes, :at => "%d:%d" % [Time.now.hour, Time.now.min+1] do
+    puts "Every minutes at #{"%d:%d" % [Time.now.hour, Time.now.min]}"
+  end
+
+  on_error do |e|
+    puts "Boom raised: #{e.message}"
+  end
+
+  on_exit do
+    puts "Bye bye"
+  end
+end

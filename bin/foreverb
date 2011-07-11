@@ -12,10 +12,14 @@ class CLI < Thor
     puts daemons.join("\n")
   end
 
-  desc "stop [DAEMON]", "Stop a specified daemon"
-  def stop(daemon)
-    found = daemons.find_all { |d| d=~/#{daemon}/i }
-    say "Daemon(s) matching '#{daemon}' not found", :red if found.empty?
+  desc "stop [DAEMON|--all]", "Stop a specified daemon"
+  method_options :all => :boolean
+  def stop(daemon=nil)
+    say "You must provide a daemon name or provide --all option", :red and return if daemon.nil? && !options.all
+    found = options.all ? daemons : daemons.find_all { |d| d=~/#{daemon}/i }
+    say "Daemon(s) matching '#{daemon}' not found", :red if found.empty? && !daemon.nil?
+    say "Daemons not found", :red if found.empty? && options.all && daemon.nil?
+
     found.each do |daemon|
       daemon = daemon.split("\t")
       if yes? "Do you want really stop #{daemon[-1]} with pid #{daemon[0]}?"

@@ -32,8 +32,6 @@ module Forever
         STDOUT.reopen(stream)
         STDERR.reopen(STDOUT)
 
-        Thread.abort_on_exception = true
-
         threads = []
         threads << Thread.new { safe_call(on_ready) } if on_ready
         jobs.each do |job|

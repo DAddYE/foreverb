@@ -12,8 +12,9 @@ class CLI < Thor
     puts daemons.join("\n")
   end
 
-  desc "stop [DAEMON|--all]", "Stop a specified daemon"
-  method_options :all => :boolean
+  desc "stop [DAEMON] [--all] [--yes]", "Stop a specified daemon"
+  method_option :all, :type => :boolean, :aliases => "-a", :desc => "Stop all daemons"
+  method_option :yes, :type => :boolean, :aliases => "-y", :desc => "Don't ask permission to kill process"
   def stop(daemon=nil)
     say "You must provide a daemon name or provide --all option", :red and return if daemon.nil? && !options.all
     found = options.all ? daemons : daemons.find_all { |d| d=~/#{daemon}/i }
@@ -21,9 +22,9 @@ class CLI < Thor
     say "Daemons not found", :red if found.empty? && options.all && daemon.nil?
 
     found.each do |daemon|
-      daemon = daemon.split("\t")
-      if yes? "Do you want really stop #{daemon[-1]} with pid #{daemon[0]}?"
-        say "Killing process #{daemon[-1]} with pid #{daemon[0]}...", :green
+      daemon = daemon.split("\t").map(&:strip)
+      if options.yes || yes?("Do you want really stop \e[1m#{daemon[-1]}\e[0m with pid \e[1m#{daemon[0]}\e[0m?")
+        say "Killing process \e[1m#{daemon[-1]}\e[0m\e[32m with pid \e[1m#{daemon[0]}", :green
         result = `kill #{daemon[0]}`.strip
         say result, :red if result != ""
       end

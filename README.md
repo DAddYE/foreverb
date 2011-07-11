@@ -180,6 +180,10 @@ Stop daemon(s):
 $ foreverb stop foo
 Do you want really stop Forever: bin/foo  with pid 19538? y
 Killing process Forever: bin/foo  with pid 19538...
+
+$ foreverb stop --all -y
+Killing process Forever: /usr/bin/githubwatcher with pid 2824
+Killing process Forever: examples/sample with pid 2836
 ```
 
 That's all!

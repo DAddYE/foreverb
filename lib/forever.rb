@@ -1,3 +1,5 @@
+require "forever/extensions"
+require "forever/every"
 require "forever/base"
 require "forever/version"
 

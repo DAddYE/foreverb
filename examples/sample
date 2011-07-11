@@ -3,14 +3,7 @@ require 'rubygems' unless defined?(Gem)
 require 'bundler/setup'
 require 'forever'
 
-$stdout_was = STDOUT.dup
-
 Forever.run do
-  def puts(text=nil)
-    text = super(text)
-    $stdout_was.print text
-  end
-
   dir File.expand_path('../', __FILE__) # Default is ../../__FILE__
 
   on_ready do

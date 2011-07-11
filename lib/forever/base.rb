@@ -1,8 +1,6 @@
 require 'fileutils'
-require 'forever/every'
 
 module Forever
-  DATE_FORMAT = "%d/%m %H:%M:%S"
 
   class Base
     include Every
@@ -52,17 +50,6 @@ module Forever
           retry
         end
       end
-    end
-
-    ##
-    # A replacement of puts that has the aim to works correclty with multiple threads
-    # and log date. If you want to personalize date, edit DATE_FORMAT.
-    #
-    def puts(text="")
-      text  = "[%s] %s" % [Time.now.strftime(DATE_FORMAT), text.to_s]
-      text += "\n" unless text[-1] == ?\n
-      print text; $stdout.flush
-      text
     end
 
     ##

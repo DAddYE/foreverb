@@ -1,5 +1,3 @@
-require 'forever/numeric'
-
 module Forever
   module Every
     class Job

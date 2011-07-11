@@ -34,21 +34,14 @@ module Forever
 
         Thread.abort_on_exception = true
 
-        begin
-          threads = []
-          threads << Thread.new { on_ready.call } if on_ready
-          jobs.each do |job|
-            threads << Thread.new do
-              loop { job.call if job.time?(Time.now); sleep 1 }
-            end
+        threads = []
+        threads << Thread.new { safe_call(on_ready) } if on_ready
+        jobs.each do |job|
+          threads << Thread.new do
+            loop { safe_call(job) if job.time?(Time.now); sleep 1 }
           end
-          threads.map(&:join)
-        rescue Exception => e
-          on_error[e] if on_error
-          stream.print "\n\n%s\n  %s\n\n" % [e.message, e.backtrace.join("\n  ")]
-          sleep 30
-          retry
         end
+        threads.map(&:join)
       end
     end
 
@@ -140,6 +133,17 @@ module Forever
     private
       def exists?(*values)
         values.all? { |value| value && File.exist?(value) }
+      end
+
+      def safe_call(block)
+        begin
+          block.call
+        rescue Exception => e
+          on_error[e] if on_error
+          puts "\n\n%s\n  %s\n\n" % [e.message, e.backtrace.join("\n  ")]
+          sleep 30
+          retry
+        end
       end
   end # Base
 end # Forever

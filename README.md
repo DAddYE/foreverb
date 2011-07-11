@@ -98,7 +98,7 @@ $ bin/foo stop
 
 ## Scheduling
 
-You can use +every+ method to schedule repetitive tasks.
+You can use ```every``` method to schedule repetitive tasks.
 
 ``` rb
 # Taken from, examples/sample

@@ -137,8 +137,8 @@ module Forever
         begin
           block.call
         rescue Exception => e
-          on_error[e] if on_error
           puts "\n\n%s\n  %s\n\n" % [e.message, e.backtrace.join("\n  ")]
+          on_error[e] if on_error
           sleep 30
           retry
         end

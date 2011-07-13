@@ -33,7 +33,7 @@ module Forever
         STDERR.reopen(STDOUT)
 
         threads = []
-        threads << Thread.new { safe_call(on_ready) } if on_ready
+        safe_call(on_ready) if on_ready
         jobs.each do |job|
           threads << Thread.new do
             loop { safe_call(job) if job.time?(Time.now); sleep 1 }
@@ -112,7 +112,7 @@ module Forever
     end
 
     ##
-    # Callback to fire when the daemon start
+    # Callback to fire when the daemon start (blocking, not in thread)
     #
     def on_ready(&block)
       block_given? ? @_on_ready = block : @_on_ready

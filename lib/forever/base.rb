@@ -36,7 +36,7 @@ module Forever
         safe_call(on_ready) if on_ready
         jobs.each do |job|
           threads << Thread.new do
-            loop { safe_call(job) if job.time?(Time.now); sleep 1 }
+            loop { job.time?(Time.now) ? safe_call(job) : sleep(1) }
           end
         end
         threads.map(&:join)
@@ -139,8 +139,6 @@ module Forever
         rescue Exception => e
           puts "\n\n%s\n  %s\n\n" % [e.message, e.backtrace.join("\n  ")]
           on_error[e] if on_error
-          sleep 30
-          retry
         end
       end
   end # Base

@@ -237,4 +237,4 @@ To see a most comprensive app running _foreverb_ + _growl_ see [githubwatcher ge
 
 ## Author
 
-DAddYE, you can follow me on twitter [@daddye](http://twitter.com/daddye)
+DAddYE, you can follow me on twitter [@daddye](http://twitter.com/daddye) or take a look at my site [daddye.it](http://www.daddye.it)

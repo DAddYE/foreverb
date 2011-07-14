@@ -10,6 +10,15 @@ Forever.run do
     puts "All jobs will will wait me for 1 second"; sleep 1
   end
 
+  every 5.seconds, :last => Time.now do
+    puts "Every 5 seconds from start"
+  end
+
+  every 30.seconds, :last => Time.now do
+    puts "Every 30 seconds from start with boom"
+    raise "woooooa"
+  end
+
   every 10.seconds, :at => "#{Time.now.hour}:00" do
     puts "Every 10 seconds but first call at #{Time.now.hour}:00"
   end

@@ -103,14 +103,14 @@ You can use `every` method to schedule repetitive tasks.
 Every allow the option `:at` to specify hour or minute and the option `:last` to specify when the `every` must start to loop.
 
 `:last`: can be nil or a Time class. Default is 0.<br />
-`:at`: can be nil, a string or an array. Default is nil.
+`:at`: can be nil, a string or an array of formatted strings. Default is nil.
 
 ``` rb
-every 1.second, :at => '19:30'         # => every second since 19:30
-every 1.minute, :at => ':30'           # => every minute but first call wait xx:30
-every 5.minutes, :at => '18:'          # => every five minutes but first call was at 18:xx
-every 1.day, :at => ['18:30', '20:30'] # => every day only at 18:30 and 20:30
-every 60.second, :last => Time.now     # => will be fired 60 seconds after you launch the app
+every 1.second,   :at => '19:30'            # => every second since 19:30
+every 1.minute,   :at => ':30'              # => every minute but first call wait xx:30
+every 5.minutes,  :at => '18:'              # => every five minutes but first call was at 18:xx
+every 1.day,      :at => ['18:30', '20:30'] # => every day only at 18:30 and 20:30
+every 60.seconds, :last => Time.now         # => will be fired 60 seconds after you launch the app
 ```
 
 Remember that `:at`:

@@ -98,32 +98,54 @@ $ bin/foo stop
 
 ## Scheduling
 
-You can use ```every``` method to schedule repetitive tasks.
+You can use `every` method to schedule repetitive tasks.
+Every allow the option `:at` to specify hour or minute.
+`:at => ` can be a string or an array and we can omit hours or minutes:
 
 ``` rb
-# Taken from, examples/sample
+every 1.second, :at => '19:30'         # => every second since 19:30
+every 1.minute, :at => ':30'           # => every minute but first call wait xx:30
+every 5.minutes, :at => '18:'          # => every five minutes but first call was at 18:xx
+every 1.day, :at => ['18:30', '20:30'] # => every day only at 18:30 and 20:30
+```
+
+Remember that `:at`:
+
+* accept only 24h format
+* you must always provide colon `:`
+
+So looking our [example](https://github.com/DAddYE/foreverb/blob/master/examples/sample):
+
+``` rb
 Forever.run do
   dir File.expand_path('../', __FILE__) # Default is ../../__FILE__
 
   on_ready do
-    puts inspect
+    puts "All jobs will will wait me for 1 second"; sleep 1
   end
 
-  every 1.seconds do
-    puts "Every one seconds"
+  every 10.seconds, :at => "#{Time.now.hour}:00" do
+    puts "Every 10 seconds but first call at #{Time.now.hour}:00"
   end
 
-  every 2.seconds do
-    puts "Every two seconds"
+  every 1.seconds, :at => "#{Time.now.hour}:#{Time.now.min+1}" do
+    puts "Every one second but first call at #{Time.now.hour}:#{Time.now.min}"
   end
 
-  every 3.seconds do
-    puts "Every three seconds, long task"
-    sleep 10
+  every 10.seconds do
+    puts "Every 10 second"
   end
 
-  every 1.day, :at => "18:28" do
-    puts "Every day at 18:28"
+  every 20.seconds do
+    puts "Every 20 second"
+  end
+
+  every 15.seconds do
+    puts "Every 15 seconds, but my task require 10 seconds"; sleep 10
+  end
+
+  every 10.seconds, :at => [":#{Time.now.min+1}", ":#{Time.now.min+2}"] do
+    puts "Every 10 seconds but first call at xx:#{Time.now.min}"
   end
 
   on_error do |e|
@@ -136,32 +158,49 @@ Forever.run do
 end
 ```
 
-You should see in logs this:
+Running the example with the following code:
+
+``` sh
+$ examples/sample; tail examples/log/sample.log; examples/sample stop
+```
+
+you should see:
 
 ```
-$ examples/sample
 => Pid not found, process seems don't exist!
-=> Process demonized with pid 1252 with Forever v.0.1.7
-[11/07 18:27:08] #<Forever dir:/Developer/src/extras/foreverb/examples, file:/Developer/src/extras/foreverb/examples/sample, log:/Developer/src/extras/foreverb/examples/log/sample.log, pid:/Developer/src/extras/foreverb/examples/tmp/sample.pid jobs:4>
-[11/07 18:27:08] Every one seconds
-[11/07 18:27:08] Every two seconds
-[11/07 18:27:08] Every three seconds, long task
-[11/07 18:27:09] Every one seconds
-[11/07 18:27:10] Every two seconds
+=> Process demonized with pid 11509 with Forever v.0.2.0
+[14/07 15:46:56] All jobs will will wait me for 1 second
+[14/07 15:46:57] Every 10 second
+[14/07 15:46:57] Every 20 second
+[14/07 15:46:57] Every 15 seconds, but my task require 10 seconds
+[14/07 15:47:00] Every one second but first call at 15:47
+[14/07 15:47:00] Every 10 seconds but first call at xx:47
+[14/07 15:47:01] Every one second but first call at 15:47
+[14/07 15:47:02] Every one second but first call at 15:47
+[14/07 15:47:03] Every one second but first call at 15:47
+[14/07 15:47:04] Every one second but first call at 15:47
+[14/07 15:47:05] Every one second but first call at 15:47
+[14/07 15:47:06] Every one second but first call at 15:47
+[14/07 15:47:07] Every 10 second
+[14/07 15:47:07] Every one second but first call at 15:47
+[14/07 15:47:08] Every one second but first call at 15:47
+[14/07 15:47:09] Every one second but first call at 15:47
+[14/07 15:47:10] Every 10 seconds but first call at xx:47
+[14/07 15:47:10] Every one second but first call at 15:47
+[14/07 15:47:11] Every one second but first call at 15:47
+[14/07 15:47:12] Every 15 seconds, but my task require 10 seconds
 ...
-[11/07 18:27:17] Every one seconds
-[11/07 18:27:18] Every one seconds
-[11/07 18:27:18] Every two seconds
-[11/07 18:27:19] Every three seconds, long task
-...
-[11/07 18:27:58] Every one seconds
-[11/07 18:27:59] Every one seconds
-[11/07 18:28:00] Every two seconds
-[11/07 18:28:00] Every one seconds
-[11/07 18:28:00] Every day at 18:28
-=> Found pid 1252...
-=> Killing process 1252...
-[11/07 18:28:18] Bye bye
+[14/07 15:47:42] Every 15 seconds, but my task require 10 seconds
+[14/07 15:47:42] Every one second but first call at 15:47
+[14/07 15:47:43] Every one second but first call at 15:47
+[14/07 15:47:44] Every one second but first call at 15:47
+[14/07 15:47:45] Every one second but first call at 15:47
+[14/07 15:47:46] Every one second but first call at 15:47
+[14/07 15:47:47] Every 10 second
+^C
+=> Found pid 11509...
+=> Killing process 11509...
+[14/07 15:48:40] Bye bye
 ```
 
 ## Monitor your daemon(s):

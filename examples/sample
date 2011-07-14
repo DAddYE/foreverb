@@ -7,24 +7,31 @@ Forever.run do
   dir File.expand_path('../', __FILE__) # Default is ../../__FILE__
 
   on_ready do
-    puts inspect
+    puts "All jobs will will wait me for 1 second"; sleep 1
   end
 
-  every 1.seconds do
-    puts "Every one seconds"
+  every 10.seconds, :at => "#{Time.now.hour}:00" do
+    puts "Every 10 seconds but first call at #{Time.now.hour}:00"
   end
 
-  every 2.seconds do
-    puts "Every two seconds"
+  every 1.seconds, :at => "#{Time.now.hour}:#{Time.now.min+1}" do
+    puts "Every one second but first call at #{Time.now.hour}:#{Time.now.min}"
   end
 
-  every 3.seconds do
-    puts "Every three seconds, long task"
-    sleep 10
+  every 10.seconds do
+    puts "Every 10 second"
   end
 
-  every 1.minutes, :at => "%d:%d" % [Time.now.hour, Time.now.min+1] do
-    puts "Every minutes at #{"%d:%d" % [Time.now.hour, Time.now.min]}"
+  every 20.seconds do
+    puts "Every 20 second"
+  end
+
+  every 15.seconds do
+    puts "Every 15 seconds, but my task require 10 seconds"; sleep 10
+  end
+
+  every 10.seconds, :at => [":#{Time.now.min+1}", ":#{Time.now.min+2}"] do
+    puts "Every 10 seconds but first call at xx:#{Time.now.min}"
   end
 
   on_error do |e|

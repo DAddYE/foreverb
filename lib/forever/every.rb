@@ -5,7 +5,7 @@ module Forever
 
       def initialize(period, options, block)
         @period, @options, @last, @running = period, options, 0, false
-        @at = parse_at(@options[:at])
+        @at = options[:at] ? parse_at(*@options[:at]) : []
         @block = block
       end
 
@@ -18,18 +18,19 @@ module Forever
 
       def time?(t)
         ellapsed_ready = (t - @last).to_i >= @period
-        time_ready     = @at.nil? || (t.hour == @at[0] && t.min == @at[1])
+        time_ready = @at.empty? || @at.any? { |at| (at[0].empty? || t.hour == at[0].to_i) && (at[1].empty? || t.min == at[1].to_i) }
         !running && ellapsed_ready && time_ready
       end
 
       private
-        def parse_at(at)
-          return unless at.is_a?(String)
-          m = at.match(/^(\d{1,2}):(\d{1,2})$/)
-          raise "Failed to parse #{at}" unless m
-          hour, min = m[1].to_i, m[2].to_i
-          raise "Failed to parse #{at}" if hour >= 24 || min >= 60
-          [hour, min]
+        def parse_at(*args)
+          args.map do |at|
+            raise "#{at} must be a string" unless at.is_a?(String)
+            raise "#{at} has not a colon separator" unless at =~ /:/
+            hour, min = at.split(":")
+            raise "Failed to parse #{at}" if hour.to_i >= 24 || min.to_i >= 60
+            [hour, min]
+          end
         end
     end # Job
 

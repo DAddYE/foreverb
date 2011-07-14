@@ -99,8 +99,10 @@ $ bin/foo stop
 ## Scheduling
 
 You can use `every` method to schedule repetitive tasks.
+
 Every allow the option `:at` to specify hour or minute and the option `:last` to specify when the `every` must start to loop.
-`:last`: can be nil or a Time class. Default is 0.
+
+`:last`: can be nil or a Time class. Default is 0.<br />
 `:at`: can be nil, a string or an array. Default is nil.
 
 ``` rb

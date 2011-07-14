@@ -165,7 +165,7 @@ end
 Running the example with the following code:
 
 ``` sh
-$ examples/sample; tail examples/log/sample.log; examples/sample stop
+$ examples/sample; tail -f -n 150 examples/log/sample.log; examples/sample stop
 ```
 
 you should see:

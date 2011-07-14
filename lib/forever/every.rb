@@ -4,8 +4,9 @@ module Forever
       attr_accessor :period, :option, :last, :running
 
       def initialize(period, options, block)
-        @period, @options, @last, @running = period, options, 0, false
-        @at = options[:at] ? parse_at(*@options[:at]) : []
+        @period, @options, @running = period, options, false
+        @at    = options[:at] ? parse_at(*@options[:at]) : []
+        @last  = options[:last].to_i
         @block = block
       end
 

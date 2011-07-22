@@ -207,17 +207,42 @@ you should see:
 [14/07 15:48:40] Bye bye
 ```
 
-## Monitor your daemon(s):
+## CLI
 
-List daemons:
+### Help:
+
+``` sh
+$ foreverb help
+Tasks:
+  foreverb help [TASK]                       # Describe available tasks or one specific task
+  foreverb list                              # List Forever running daemons
+  foreverb restart [DAEMON] [--all] [--yes]  # Restart one or more matching daemons
+  foreverb start [DAEMON] [--all] [--yes]    # Start one or more matching daemons
+  foreverb stop [DAEMON] [--all] [--yes]     # Stop one or more matching daemons
+  foreverb tail [DAEMON]                     # Tail log of first matching daemon
+  foreverb update [DAEMON] [--all] [--yes]   # Update config from one or more matching daemons
+  foreverb version                           # show the version number
+```
+
+### List daemons:
 
 ``` sh
 $ foreverb list
-PID     RSS     CPU   CMD
-19838   32512   1.6   Forever: bin/githubwatcher
+     RUNNING  /Developer/src/Extras/githubwatcher/bin/githubwatcher
+     RUNNING  /Developer/src/Extras/foreverb/examples/sample
+Reading config from: /Users/DAddYE/.foreverb
 ```
 
-Stop daemon(s):
+### Monitor daemons (with ps):
+
+``` sh
+$ foreverb list -m
+PID   RSS     CPU    CMD
+5528  168 Mb  0.1 %  Forever: /Developer/src/Extras/githubwatcher/bin/githubwatcher
+5541  18 Mb   0.0 %  Forever: /Developer/src/Extras/foreverb/examples/sample
+```
+
+### Stop daemon(s):
 
 ``` sh
 $ foreverb stop foo
@@ -229,7 +254,65 @@ Killing process Forever: /usr/bin/githubwatcher with pid 2824
 Killing process Forever: examples/sample with pid 2836
 ```
 
-That's all!
+### Start daemon(s):
+
+``` sh
+$ foreverb start github
+Do you want really start /Developer/src/Extras/githubwatcher/bin/githubwatcher? y
+=> Found pid 5528...
+=> Killing process 5528...
+=> Process demonized with pid 14925 with Forever v.0.2.2
+```
+
+as for stop we allow `--all` and `-y`
+
+### Restart daemon(s)
+
+``` sh
+$ foreverb restart github
+Do you want really restart /Developer/src/Extras/githubwatcher/bin/githubwatcher? y
+=> Found pid 5528...
+=> Killing process 5528...
+=> Process demonized with pid 14925 with Forever v.0.2.2
+```
+
+as for stop we allow `--all` and `-y`
+
+### Tail logs
+
+``` sh
+$ foreverb tail github
+[22/07 11:22:17] Quering git://github.com/DAddYE/lipsiadmin.git...
+[22/07 11:22:17] Quering git://github.com/DAddYE/lightbox.git...
+[22/07 11:22:17] Quering git://github.com/DAddYE/exception-notifier.git...
+[22/07 11:22:17] Quering git://github.com/DAddYE/lipsiablog.git...
+[22/07 11:22:17] Quering git://github.com/DAddYE/purple_ruby.git...
+```
+
+you can specify how many lines show with option `-n`, default is `150`
+
+### Update config
+
+This command would be helpful if you change `pid` `log` path, in this way the global config file `~/.foreverb` will be update
+using latest informations from yours deamons
+
+Note that you can personalize the config file setting `FOREVER_PATH` matching your needs.
+
+``` sh
+$ foreverb update github
+Do you want really update config from /Developer/src/Extras/githubwatcher/bin/githubwatcher? y
+```
+
+as for stop we allow `--all` and `-y`
+
+## HACKS
+
+Bundler has the bad behavior to load `Gemfile` from your current path, so if your `daemons` (ex: [githubwatcher](https://github.com/daddye/githubwatcher))
+is shipped with their own `Gemfile` to prevent errors you must insert that line:
+
+``` ruby
+ENV['BUNDLE_GEMFILE'] = File.expand_path('../../Gemfile', __FILE__) # edit matching your Gemfile path
+```
 
 ## Extras
 
@@ -238,3 +321,19 @@ To see a most comprensive app running _foreverb_ + _growl_ see [githubwatcher ge
 ## Author
 
 DAddYE, you can follow me on twitter [@daddye](http://twitter.com/daddye) or take a look at my site [daddye.it](http://www.daddye.it)
+
+## Copyright
+
+Copyright (C) 2011 Davide D'Agostino - [@daddye](http://twitter.com/daddye)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files (the “Software”), to deal in the Software without restriction, including without
+limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

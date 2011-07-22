@@ -14,15 +14,27 @@ module Forever
       Dir.mkdir(File.dirname(log)) if log && !File.exist?(File.dirname(log))
       Dir.mkdir(File.dirname(pid)) if pid && !File.exist?(File.dirname(pid))
 
+      write_config!
+
+      if ARGV.any? { |arg| arg == "config" }
+        print config.to_yaml
+        return
+      end
+
+      return if ARGV.any? { |arg| arg == "up" }
+
       stop!
 
-      return if ARGV[0] == "stop"
+      return if ARGV.any? { |arg| arg == "stop" }
 
       fork do
         $0 = "Forever: #{$0}"
         print "=> Process demonized with pid #{Process.pid} with Forever v.#{Forever::VERSION}\n"
 
         %w(INT TERM KILL).each { |signal| trap(signal)  { stop! } }
+        trap(:HUP) do
+          IO.open(1, 'w'){ |s| s.puts config }
+        end
 
         File.open(pid, "w") { |f| f.write(Process.pid.to_s) } if pid
 
@@ -124,11 +136,17 @@ module Forever
     alias :inspect :to_s
 
     def config
-      { :dir => dir, :file => file, :log => log, :pid => pid }.to_yaml
+      { :dir => dir, :file => file, :log => log, :pid => pid }
     end
-    alias :to_yaml :config
 
     private
+      def write_config!
+        config_was = File.exist?(FOREVER_PATH) ? YAML.load_file(FOREVER_PATH) : []
+        config_was.delete_if { |conf| conf[:file] == file }
+        config_was << config
+        File.open(FOREVER_PATH, "w") { |f| f.write config_was.to_yaml }
+      end
+
       def exists?(*values)
         values.all? { |value| value && File.exist?(value) }
       end

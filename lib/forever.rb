@@ -3,6 +3,8 @@ require "forever/every"
 require "forever/base"
 require "forever/version"
 
+FOREVER_PATH = ENV['FOREVER_PATH'] ||= File.expand_path("~/.foreverb") unless defined?(FOREVER_PATH)
+
 module Forever
   extend self
 

@@ -1,4 +1,4 @@
-# Version 0.2.2
+# Version 0.2.3
 
 * Added global monitoring, to easily watch each `foreverb` daemon
 * Look daemons through config file and unix command `ps`

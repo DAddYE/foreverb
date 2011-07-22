@@ -39,7 +39,6 @@ class CLI < Thor
       if options.yes || yes?("Do you want really stop \e[1m#{conf[:file]}\e[0m?")
         say_status "STOPPING", conf[:file]
         system(conf[:file], 'stop')
-        say_status "ERROR", result, :red if result != ""
       end
     end
   end

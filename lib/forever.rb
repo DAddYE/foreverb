@@ -7,6 +7,8 @@ require "forever/version"
 YAML::ENGINE.yamler = "syck" if defined?(YAML::ENGINE)
 
 FOREVER_PATH = ENV['FOREVER_PATH'] ||= File.expand_path("~/.foreverb") unless defined?(FOREVER_PATH)
+path = File.dirname(FOREVER_PATH)
+Dir.mkdir(path) unless File.exist?(path)
 
 module Forever
   extend self

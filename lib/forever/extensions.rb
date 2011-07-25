@@ -22,4 +22,5 @@ module Kernel
     print text; $stdout.flush
     text
   end
+  alias :log :puts
 end

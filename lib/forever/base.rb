@@ -53,6 +53,8 @@ module Forever
         end
         threads.map(&:join)
       end
+
+      self
     end
 
     ##

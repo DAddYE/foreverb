@@ -1,3 +1,7 @@
+# Version 0.2.4 (unreleased)
+
+* Ruby 1.9.2 compatibility
+
 # Version 0.2.3
 
 * Added global monitoring, to easily watch each `foreverb` daemon

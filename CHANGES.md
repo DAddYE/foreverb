@@ -1,6 +1,9 @@
 # Version 0.2.4 (unreleased)
 
 * Ruby 1.9.2 compatibility
+* Stop process using pid instead of file
+* Added specs
+* Fixed `foreverb list` where in some scenarios don't return a list of process
 
 # Version 0.2.3
 

@@ -3,6 +3,7 @@ require 'rubygems' unless defined?(Gem)
 require File.expand_path('../../lib/forever/version.rb', __FILE__)
 require 'thor'
 require 'yaml'
+require 'fileutils'
 
 FOREVER_PATH = ENV['FOREVER_PATH'] ||= File.expand_path("~/.foreverb") unless defined?(FOREVER_PATH)
 
@@ -11,19 +12,20 @@ class CLI < Thor
   desc "list", "List Forever running daemons"
   method_option :monitor, :type => :boolean, :aliases => "-m", :default => false, :desc => "Show memory and cpu usage with ps"
   def list
-    say "No deamons running", :red if config.empty?
+    say "Your config is empty, so no deamons was found.", :red if config.empty? && !options.monitor
 
     if options.monitor
       print_table([%w(PID RSS CPU CMD), *ps])
     else
       config.each do |conf|
         status = begin
-          "WRONG CONFIG" and return unless File.exist?(conf[:pid])
           pid = File.read(conf[:pid]).to_i
           Process.kill(0, pid)
           "RUNNING"
         rescue Errno::ESRCH, Errno::ENOENT
           "NOT RUNNING"
+        rescue Errno::EPERM
+          "RUNNING"
         end
         say_status status, conf[:file], status =~ /^RUNNING/ ? :green : :red
       end
@@ -38,7 +40,12 @@ class CLI < Thor
     find(daemon, :multiple => options.all).each do |conf|
       if options.yes || yes?("Do you want really stop \e[1m#{conf[:file]}\e[0m?")
         say_status "STOPPING", conf[:file]
-        system(conf[:file], 'stop')
+        begin
+          pid = File.read(conf[:pid]).to_i
+          Process.kill(:INT, pid)
+        rescue Exception => e
+          say_status "ERROR", e.message, :red
+        end
       end
     end
   end
@@ -71,7 +78,10 @@ class CLI < Thor
   method_option :all, :type => :boolean, :aliases => "-a", :desc => "All matching daemons"
   method_option :yes, :type => :boolean, :aliases => "-y", :desc => "Don't ask permission to start the daemon"
   def update(daemon=nil)
-    find(daemon, :multiple => options.all).each do |conf|
+    match = find(daemon, :multiple => options.all)
+    return if match.empty?
+    FileUtils.rm_rf(FOREVER_PATH)
+    match.each do |conf|
       system(conf[:file], 'up') if options.yes || yes?("Do you want really update config from \e[1m#{conf[:file]}\e[0m?")
     end
   end

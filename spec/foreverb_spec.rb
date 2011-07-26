@@ -2,18 +2,8 @@ require 'spec_helper'
 
 describe Forever do
 
-  before do
-    FileUtils.rm_rf File.dirname(FOREVER_PATH)
-    Dir.mkdir File.dirname(FOREVER_PATH)
-    ARGV.clear; ARGV << 'up'
-  end
-
-  after do
-    FileUtils.rm_rf(File.dirname(FOREVER_PATH))
-    if @forever
-      FileUtils.rm_rf(File.dirname(@forever.log)) if @forever.log
-      FileUtils.rm_rf(File.dirname(@forever.pid)) if @forever.pid
-    end
+  before :each do
+    ARGV << 'up'
   end
 
   it 'should set a basic config' do
@@ -52,5 +42,6 @@ describe Forever do
     pid = File.read(@forever.pid).to_i
     Process.waitpid(pid)
     $stdout.string.should match(/pid not found/i)
+    $stdout = stdout_was
   end
 end

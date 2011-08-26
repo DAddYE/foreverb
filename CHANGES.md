@@ -1,3 +1,8 @@
+# Version 0.2.6 - August 27, 2011
+
+* Added back support for update the daemon config
+* Improved a bit our outputs showing the daemon name
+
 # Version 0.2.5 - August 26, 2011
 
 * Moved stop to kill

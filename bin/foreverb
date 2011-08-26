@@ -99,7 +99,7 @@ class CLI < Thor
     return if match.empty?
     FileUtils.rm_rf(FOREVER_PATH)
     match.each do |conf|
-      system(conf[:file], 'up') if options.yes || yes?("Do you want really update config from \e[1m#{conf[:file]}\e[0m?")
+      system(conf[:file], 'update') if options.yes || yes?("Do you want really update config from \e[1m#{conf[:file]}\e[0m?")
     end
   end
 

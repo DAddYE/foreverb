@@ -28,9 +28,12 @@ module Forever
         when 'kill'
           stop!
           exit
-        when 'help', '-h'
-          print <<-RUBY.gsub(/ {10}/,'') % File.basename(file)
-            Usage: \e[1m./%s\e[0m [start|stop|kill|restart|config]
+        when 'update'
+          print "[\e[90m%s\e[0m] Config written in \e[1m%s\e[0m\n" % [name, FOREVER_PATH]
+          exit
+        else
+          print <<-RUBY.gsub(/ {10}/,'') % name
+            Usage: \e[1m./%s\e[0m [start|stop|kill|restart|config|update]
 
             Commands:
 
@@ -39,6 +42,7 @@ module Forever
               restart    same as start
               kill       force stop by sending a KILL signal to the process
               config     show the current daemons config
+              update     update the daemon config
 
           RUBY
           exit
@@ -46,7 +50,7 @@ module Forever
 
       fork do
         $0 = "Forever: #{$0}"
-        print "=> Process demonized with pid \e[1m#{Process.pid}\e[0m with Forever v.#{Forever::VERSION}\n"
+        print "[\e[90m%s\e[0m] Process demonized with pid \e[1m%d\e[0m with Forever v.%s\n" % [name, Process.pid, Forever::VERSION]
 
         %w(INT TERM KILL).each { |signal| trap(signal)  { stop! } }
         trap(:HUP) do
@@ -95,6 +99,13 @@ module Forever
     end
 
     ##
+    # Daemon name
+    #
+    def name
+      File.basename(file, '.*')
+    end
+
+    ##
     # Base working Directory
     #
     def dir(value=nil)
@@ -107,7 +118,7 @@ module Forever
     # Default: dir + 'log/[process_name].log'
     #
     def log(value=nil)
-      @_log ||= File.join(dir, "log/#{File.basename(file)}.log") if exists?(dir, file)
+      @_log ||= File.join(dir, "log/#{name}.log") if exists?(dir, file)
       value.nil? ? @_log : @_log = value
     end
 
@@ -117,7 +128,7 @@ module Forever
     # Default: dir + 'tmp/[process_name].pid'
     #
     def pid(value=nil)
-      @_pid ||= File.join(dir, "tmp/#{File.basename(file)}.pid") if exists?(dir, file)
+      @_pid ||= File.join(dir, "tmp/#{name}.pid") if exists?(dir, file)
       value.nil? ? @_pid : @_pid = value
     end
 
@@ -129,11 +140,11 @@ module Forever
       if running?
         pid_was = File.read(pid).to_i
         FileUtils.rm_f(pid)
-        print "=> Killing process \e[1m%d\e[0m...\n" % pid_was
+        print "[\e[90m%s\e[0m] Killing process \e[1m%d\e[0m...\n" % [name, pid_was]
         on_exit.call if on_exit
         Process.kill(:KILL, pid_was)
       else
-        print "=> Process with \e[1mnot found\e[0m"
+        print "[\e[90m%s\e[0m] Process with \e[1mnot found\e[0m" % name
       end
     end
 
@@ -142,7 +153,7 @@ module Forever
     #
     def stop
       if running?
-        print '=> Waiting the daemon\'s death '
+        print "[\e[90m%s\e[0m] Waiting the daemon\'s death " % name
         FileUtils.touch(stop_txt)
         while running?(true)
           print '.'; $stdout.flush
@@ -179,9 +190,9 @@ module Forever
     def running?(silent=false)
       if exists?(pid)
         current = File.read(pid).to_i
-        print "=> Found pid \e[1m%d\e[0m...\n" % current unless silent
+        print "[\e[90m%s\e[0m] Found pid \e[1m%d\e[0m...\n" % [name, current] unless silent
       else
-        print "=> Pid \e[1mnot found\e[0m, process seems don't exist!\n" unless silent
+        print "[\e[90m%s\e[0m] Pid \e[1mnot found\e[0m, process seems don't exist!\n" % name unless silent
         return false
       end
 

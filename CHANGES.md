@@ -1,3 +1,9 @@
+# Version 0.2.5 - August 26, 2011
+
+* Moved stop to kill
+* Added a new stop method that wait until workers are idle
+* Improved a bit outputs
+
 # Version 0.2.4 - July 25, 2011
 
 * Ruby 1.9.2 compatibility

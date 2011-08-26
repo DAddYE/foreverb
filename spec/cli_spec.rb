@@ -22,4 +22,13 @@ describe "CLI" do
     result.should_not match(/ERROR/)
     cli('list').should match(/NOT RUNNING/)
   end
+
+  it "should kill daemons" do
+    run_example
+    cli('list').should match(/RUNNING/)
+    result = cli('kill -a -y')
+    result.should match(/KILLING/)
+    result.should_not match(/ERROR/)
+    cli('list').should match(/NOT RUNNING/)
+  end
 end

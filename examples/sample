@@ -6,6 +6,10 @@ require 'forever'
 Forever.run do
   dir File.expand_path('../', __FILE__) # Default is ../../__FILE__
 
+  every 5.seconds do
+    puts 'every 5 seconds'
+  end
+
   on_ready do
     puts "All jobs will will wait me for 1 second"; sleep 1
   end

@@ -3,6 +3,7 @@ require 'spec_helper'
 describe Forever do
 
   before :each do
+    $stdout = StringIO.new
     ARGV << 'up'
   end
 
@@ -41,7 +42,7 @@ describe Forever do
     sleep 0.1 while !File.exist?(@forever.pid)
     pid = File.read(@forever.pid).to_i
     Process.waitpid(pid)
-    $stdout.string.should match(/pid not found/i)
+    $stdout.string.should match(/not found/i)
     $stdout = stdout_was
   end
 end

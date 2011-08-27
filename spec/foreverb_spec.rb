@@ -10,8 +10,8 @@ describe Forever do
   it 'should set a basic config' do
     @forever = Forever.run {}
     @forever.dir.should == File.expand_path("../../", __FILE__)
-    @forever.log.should == File.join(@forever.dir, 'log', File.basename(__FILE__) + '.log')
-    @forever.pid.should == File.join(@forever.dir, 'tmp', File.basename(__FILE__) + '.pid')
+    @forever.log.should == File.join(@forever.dir, 'log', File.basename(__FILE__, '.*') + '.log')
+    @forever.pid.should == File.join(@forever.dir, 'tmp', File.basename(__FILE__, '.*') + '.pid')
     @forever.file.should == __FILE__
     config = YAML.load_file(FOREVER_PATH)
     config[0][:file].should == __FILE__
@@ -24,8 +24,8 @@ describe Forever do
       dir File.expand_path('../', __FILE__)
     end
     @forever.dir.should == File.expand_path('../', __FILE__)
-    @forever.log.should == File.join(@forever.dir, 'log', File.basename(__FILE__) + '.log')
-    @forever.pid.should == File.join(@forever.dir, 'tmp', File.basename(__FILE__) + '.pid')
+    @forever.log.should == File.join(@forever.dir, 'log', File.basename(__FILE__, '.*') + '.log')
+    @forever.pid.should == File.join(@forever.dir, 'tmp', File.basename(__FILE__, '.*') + '.pid')
     @forever.file.should == __FILE__
     config = YAML.load_file(FOREVER_PATH)
     config[0][:file].should == __FILE__

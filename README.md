@@ -14,6 +14,8 @@ In my servers I've several daemons and what I need is:
 * easily manage exceptions
 * easily see logs
 * easily start/stop/restart daemon
+* no blocking jobs
+* no blocking queue
 
 As like [sinatra](https://github.com/sinatra/sinatra) and [padrino](https://github.com/padrino/padrino-framework) I need a
 **thin** framework to do these jobs in few seconds. This mean that:
@@ -61,7 +63,7 @@ Forever.run do
     end
   end
 
-  on_ready do
+  before :each do # or if you prefer before :all
     require 'bundler/setup'
     require 'foo'
     Foo.start_loop
@@ -124,7 +126,7 @@ So looking our [example](https://github.com/DAddYE/foreverb/blob/master/examples
 Forever.run do
   dir File.expand_path('../', __FILE__) # Default is ../../__FILE__
 
-  on_ready do
+  before :all do
     puts "All jobs will will wait me for 1 second"; sleep 1
   end
 
@@ -146,6 +148,7 @@ Forever.run do
 
   every 15.seconds do
     puts "Every 15 seconds, but my task require 10 seconds"; sleep 10
+    # This doesn't block other jobs and your queue !!!!!!!
   end
 
   every 10.seconds, :at => [":#{Time.now.min+1}", ":#{Time.now.min+2}"] do
@@ -205,6 +208,30 @@ you should see:
 => Found pid 11509...
 => Killing process 11509...
 [14/07 15:48:40] Bye bye
+```
+
+## Filters
+
+In foreverb we have a couple of filters, `before` and `after`, like rspec you should be able to filter `before :all` or `before :each`.
+
+``` rb
+before :all do
+  puts "This will be ran only at start"
+end
+
+before :each do
+  puts "Do that before each job"
+end
+
+# ...  here jobs ...
+
+after :all do
+  puts "This will be ran only at shutdown"
+end
+
+after :each do
+  puts "Do that after each job"
+end
 ```
 
 ## CLI
@@ -307,11 +334,44 @@ as for stop we allow `--all` and `-y`
 
 ## HACKS
 
+### Bundler
+
 Bundler has the bad behavior to load `Gemfile` from your current path, so if your `daemons` (ex: [githubwatcher](https://github.com/daddye/githubwatcher))
 is shipped with their own `Gemfile` to prevent errors you must insert that line:
 
 ``` ruby
 ENV['BUNDLE_GEMFILE'] = File.expand_path('../../Gemfile', __FILE__) # edit matching your Gemfile path
+```
+
+### Rails/Padrino prevent memory leaks
+
+I highly suggest to use `fork` and `before` filters when you are using `forever` with frameworks, this since running same job on our ruby will eat a lot of
+ram, so the better way that I found is that:
+
+```rb
+Forever.run :fork => true do
+  before :each do
+    require '/config/boot' # here the rails/padrino environment
+  end
+
+  every 10.seconds, :at => ['12:00', '00:00'] do
+    Project.all(&:perform_long_task)
+  end
+
+  every 1.minute do
+    Account.all.map(&:send_emails)
+  end
+end
+```
+
+This is similar to create a new process i.e.:
+
+```rb
+Process.fork do
+  require '/config/boot'
+  my_long_jobs
+end
+Process.waitall
 ```
 
 ## Extras

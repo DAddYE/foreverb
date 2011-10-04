@@ -1,48 +1,36 @@
 FOREVER_PATH = ENV['FOREVER_PATH'] ||= File.expand_path("../tmp/db.yaml", __FILE__)
 require 'rubygems' unless defined?(Gem)
 require 'bundler/setup'
-require 'rspec'
+require 'minitest/autorun'
 require 'forever'
 require 'fileutils'
+require 'tmpdir'
 
-module Helper
-  def capture_stdout(&block)
-    stdout_was, $stdout = $stdout, StringIO.new
-    block.call
-    return $stdout
-  ensure
-    $stdout = stdout_was
+$dir = File.expand_path('.')
+
+class MiniTest::Spec
+  def run_example(options={}, &block)
+    block = proc { every(1.second) { puts 'foo' } } unless block_given?
+    capture_io { @forever = Forever.run(options, &block) }
   end
 
-  def run_example
-    capture_stdout do
-      @forever = Forever.run do
-        on_ready { sleep }
-      end
-    end
-  end
+  let(:example_filename) { File.expand_path(__FILE__) }
 
-  def cli(task)
-    output = `#{Gem.ruby} #{File.expand_path('../../bin/foreverb', __FILE__)} #{task}`
-  end
-end
-
-RSpec.configure do |config|
-  config.include(Helper)
-
-  config.before :each do
+  before do
+    Dir.chdir($dir)
     FileUtils.rm_rf File.dirname(FOREVER_PATH)
     Dir.mkdir File.dirname(FOREVER_PATH)
     ARGV.clear
   end
 
-  config.after :each do
+  after do
     FileUtils.rm_rf(File.dirname(FOREVER_PATH))
     if @forever
-      capture_stdout { @forever.stop! }
+      capture_io { @forever.stop! }
       FileUtils.rm_rf(File.dirname(@forever.log)) if @forever.log
       FileUtils.rm_rf(File.dirname(@forever.pid)) if @forever.pid
     end
+    Dir.chdir($dir)
     ARGV.clear
   end
 end

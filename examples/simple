@@ -1,0 +1,32 @@
+#!/usr/bin/ruby
+require 'rubygems' unless defined?(Gem)
+require 'bundler/setup'
+require 'forever'
+
+Forever.run :fork => ENV['FORK'] do
+  dir File.expand_path('../', __FILE__) # Default is ../../__FILE__
+
+  before :each do
+    puts 'before all'
+  end
+
+  after :each do
+    puts 'after all'
+  end
+
+  every 1.seconds do
+    puts 'wait me 10 seconds'; sleep 10
+  end
+
+  every 2.seconds do
+    puts 'every 2 seconds'
+  end
+
+  on_ready do
+    puts "All jobs will will wait me for 1 second"; sleep 1
+  end
+
+  on_exit do
+    puts "Bye bye"
+  end
+end

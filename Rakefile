@@ -1,6 +1,7 @@
 require 'rubygems' unless defined?(Gem)
 require 'bundler/gem_tasks'
 require 'rspec/core/rake_task'
+require 'rake/testtask'
 
 %w(install release).each do |task|
   Rake::Task[task].enhance do
@@ -8,9 +9,9 @@ require 'rspec/core/rake_task'
   end
 end
 
-desc "Bump version on github"
+desc 'Bump version on github'
 task :bump do
-  if `git status -s`.strip == ""
+  if `git status -s`.strip == ''
     puts "\e[31mNothing to commit (working directory clean)\e[0m"
   else
     version  = Bundler.load_gemspec(Dir[File.expand_path('../*.gemspec', __FILE__)].first).version
@@ -18,13 +19,22 @@ task :bump do
   end
 end
 
-task :release => :bump
-
-desc "Run complete application spec suite"
-RSpec::Core::RakeTask.new("spec") do |t|
-  t.skip_bundler = true
-  t.pattern = './spec/**/*_spec.rb'
-  t.rspec_opts = %w(-fs --color --fail-fast)
+Rake::TestTask.new(:spec) do |t|
+  t.test_files = Dir['spec/**/*_spec.rb']
+  t.verbose = true
 end
 
+namespace :example do
+  Dir['./examples/*'].each do |path|
+    next if File.directory?(path)
+    name = File.basename(path)
+    desc "Run example #{name}"
+    task name, :fork do |t, args|
+      ENV['FORK'] = args[:fork]
+      exec "#{Gem.ruby} #{path} && sleep 3 && tail -f -n 150 #{path}/../log/#{name}.log; #{path} stop"
+    end
+  end
+end
+
+task :release => :bump
 task :default => :spec

@@ -4,11 +4,17 @@ module Forever
 
   class Base
     include Every
+    attr_reader :started_at
 
     def initialize(options={}, &block)
+      forking = options.delete(:fork)
+
+      # Run others methods
       options.each { |k,v| send(k, v) }
 
       instance_eval(&block)
+
+      raise 'No jobs defined!' if jobs.empty?
 
       Dir.chdir(dir) if exists?(dir)
       Dir.mkdir(File.dirname(log)) if log && !File.exist?(File.dirname(log))
@@ -48,9 +54,13 @@ module Forever
           exit
       end
 
+      # Enable REE - http://www.rubyenterpriseedition.com/faq.html#adapt_apps_for_cow
+      GC.copy_on_write_friendly = true if GC.respond_to?(:copy_on_write_friendly=)
+
       fork do
         $0 = "Forever: #{$0}"
-        print "[\e[90m%s\e[0m] Process demonized with pid \e[1m%d\e[0m with Forever v.%s\n" % [name, Process.pid, Forever::VERSION]
+        print "[\e[90m%s\e[0m] Process demonized with pid \e[1m%d\e[0m with \e[1m%s\e[0m and Forever v.%s\n" %
+          [name, Process.pid, forking ? :fork : :thread, Forever::VERSION]
 
         %w(INT TERM KILL).each { |signal| trap(signal)  { stop! } }
         trap(:HUP) do
@@ -65,27 +75,34 @@ module Forever
         STDOUT.reopen(stream)
         STDERR.reopen(STDOUT)
 
-        threads = []
-        safe_call(on_ready) if on_ready
-        started_at = Time.now
+        @started_at = Time.now
 
-        jobs.each do |job|
-          threads << Thread.new do
-            loop do
-              break if File.exist?(stop_txt) && File.mtime(stop_txt) > started_at
-              job.time?(Time.now) ? safe_call(job) : sleep(1)
+        # Invoke our before :all filters
+        before_filters[:all].each { |block| safe_call(block) }
+
+        # Start deamons
+        until stopping?
+          if forking
+            begin
+              jobs.select { |job| job.time?(Time.now) }.each do |job|
+                Process.fork { job_call(job) }
+              end
+            rescue Errno::EAGAIN
+              puts "\n\nWait all processes since os cannot create a new one\n\n"
+              Process.waitall
             end
+          else
+            jobs.each { |job| Thread.new { job_call(job) } if job.time?(Time.now) }
           end
+          sleep 0.5
         end
-
-        # Launch our workers
-        threads.map(&:join)
 
         # If we are here it means we are exiting so we can remove the pid and pending stop.txt
         FileUtils.rm_f(pid)
         FileUtils.rm_f(stop_txt)
 
-        on_exit.call if on_exit
+        # Invoke our after :all filters
+        after_filters[:all].each { |block| safe_call(block) }
       end
 
       self
@@ -141,7 +158,7 @@ module Forever
         pid_was = File.read(pid).to_i
         FileUtils.rm_f(pid)
         print "[\e[90m%s\e[0m] Killing process \e[1m%d\e[0m...\n" % [name, pid_was]
-        on_exit.call if on_exit
+        after_filters[:all].each { |block| safe_call(block) }
         Process.kill(:KILL, pid_was)
       else
         print "[\e[90m%s\e[0m] Process with \e[1mnot found\e[0m" % name
@@ -174,14 +191,14 @@ module Forever
     # Callback raised when at exit
     #
     def on_exit(&block)
-      block_given? ? @_on_exit = block : @_on_exit
+      after(:all, &block)
     end
 
     ##
     # Callback to fire when the daemon start (blocking, not in thread)
     #
     def on_ready(&block)
-      block_given? ? @_on_ready = block : @_on_ready
+      before(:all, &block)
     end
 
     ##
@@ -214,29 +231,58 @@ module Forever
       { :dir => dir, :file => file, :log => log, :pid => pid }
     end
 
-    private
-      def write_config!
-        config_was = File.exist?(FOREVER_PATH) ? YAML.load_file(FOREVER_PATH) : []
-        config_was.delete_if { |conf| conf[:file] == file }
-        config_was << config
-        File.open(FOREVER_PATH, "w") { |f| f.write config_was.to_yaml }
-      end
+    def before(filter, &block)
+      raise "Filter #{filter.inspect} not supported, available options are: :each, :all" unless [:each, :all].include?(filter)
+      before_filters[filter] << block
+    end
 
-      def exists?(*values)
-        values.all? { |value| value && File.exist?(value) }
-      end
+    def after(filter, &block)
+      raise "Filter #{filter.inspect} not supported, available options are: :each, :all" unless [:each, :all].include?(filter)
+      after_filters[filter] << block
+    end
 
-      def safe_call(block)
-        begin
-          block.call
-        rescue Exception => e
-          puts "\n\n%s\n  %s\n\n" % [e.message, e.backtrace.join("\n  ")]
-          on_error[e] if on_error
-        end
-      end
+  private
+    def before_filters
+      @_before_filters ||= Hash.new { |hash, k| hash[k] = [] }
+    end
 
-      def stop_txt
-        @_stop_txt ||= File.join(dir, 'stop.txt')
+    def after_filters
+      @_after_filters ||= Hash.new { |hash, k| hash[k] = [] }
+    end
+
+    def stopping?
+      File.exist?(stop_txt) && File.mtime(stop_txt) > started_at
+    end
+
+    def write_config!
+      config_was = File.exist?(FOREVER_PATH) ? YAML.load_file(FOREVER_PATH) : []
+      config_was.delete_if { |conf| conf[:file] == file }
+      config_was << config
+      File.open(FOREVER_PATH, "w") { |f| f.write config_was.to_yaml }
+    end
+
+    def exists?(*values)
+      values.all? { |value| value && File.exist?(value) }
+    end
+
+    def job_call(job)
+      return unless job.time?(Time.now)
+      before_filters[:each].each { |block| safe_call(block) }
+      safe_call(job)
+      after_filters[:each].each { |block| safe_call(block) }
+    end
+
+    def safe_call(block)
+      begin
+        block.call
+      rescue Exception => e
+        puts "\n\n%s\n  %s\n\n" % [e.message, e.backtrace.join("\n  ")]
+        on_error[e] if on_error
       end
+    end
+
+    def stop_txt
+      @_stop_txt ||= File.join(dir, 'stop.txt')
+    end
   end # Base
 end # Forever

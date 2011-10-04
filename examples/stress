@@ -1,0 +1,12 @@
+#!/usr/bin/ruby
+require 'rubygems' unless defined?(Gem)
+require 'bundler/setup'
+require 'forever'
+
+Forever.run :fork => ENV['FORK'] do
+  dir File.expand_path('../', __FILE__) # Default is ../../__FILE__
+
+  (1..40).each do |i|
+    every(i.seconds) { puts 'Every %d seconds' % i; sleep i }
+  end
+end

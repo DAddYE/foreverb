@@ -1,3 +1,9 @@
+# Version 0.3.0 - October 4, 2011
+
+* Added fork backend
+* Improved queue
+* Added before/after each/all filters
+
 # Version 0.2.6 - August 27, 2011
 
 * Added back support for update the daemon config

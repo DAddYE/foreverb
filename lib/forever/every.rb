@@ -1,26 +1,39 @@
+require 'tmpdir'
+
 module Forever
   module Every
     class Job
-      attr_accessor :period, :option, :last, :running
 
       def initialize(period, options, block)
-        @period, @options, @running = period, options, false
-        @at    = options[:at] ? parse_at(*@options[:at]) : []
-        @last  = options[:last].to_i
-        @block = block
+        @period   = period
+        @at_start = options[:at] == :start && options.delete(:at) ? true : false
+        @at       = options[:at] ? parse_at(*options[:at]) : []
+        @tmp      = File.join(Dir.tmpdir, '%x' % rand(255**10))
+        @block    = block
       end
 
       def call
-        @last, @running = Time.now, true
+        File.open(@tmp, 'w') { |f| f.write('running') }
+        FileUtils.touch(@tmp)
         @block.call
       ensure
-        @running = false
+        File.open(@tmp, 'w') { |f| f.write('idle') }
+      end
+
+      def running?
+        File.exist?(@tmp) && File.read(@tmp) == 'running'
+      end
+
+      def last
+        File.mtime(@tmp)
+      rescue Errno::ENOENT
+        0
       end
 
       def time?(t)
-        ellapsed_ready = (t - @last).to_i >= @period
+        elapsed_ready = (t - last).to_i >= @period
         time_ready = @at.empty? || @at.any? { |at| (at[0].empty? || t.hour == at[0].to_i) && (at[1].empty? || t.min == at[1].to_i) }
-        !running && ellapsed_ready && time_ready
+        !running? && elapsed_ready && time_ready
       end
 
       private

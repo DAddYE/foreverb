@@ -3,7 +3,6 @@ require 'fileutils'
 module Forever
 
   class Base
-    include Every
     attr_reader :started_at
 
     def initialize(options={}, &block)
@@ -16,9 +15,11 @@ module Forever
 
       raise 'No jobs defined!' if jobs.empty?
 
-      Dir.chdir(dir) if exists?(dir)
+      # Setup directories
+      Dir.chdir(dir)
+      FileUtils.rm_rf(tmp) if File.exist?(tmp)
+      Dir.mkdir(tmp)
       Dir.mkdir(File.dirname(log)) if log && !File.exist?(File.dirname(log))
-      Dir.mkdir(File.dirname(pid)) if pid && !File.exist?(File.dirname(pid))
 
       write_config!
 
@@ -82,30 +83,54 @@ module Forever
 
         # Start deamons
         until stopping?
-          if forking
-            begin
-              jobs.select { |job| job.time?(Time.now) }.each do |job|
-                Process.fork { job_call(job) }
-              end
-            rescue Errno::EAGAIN
-              puts "\n\nWait all processes since os cannot create a new one\n\n"
-              Process.waitall
+          current_queue = 1
+          jobs.select { |job| job.time?(Time.now) }.each do |job|
+            if queue && queue > current_queue
+              puts "\n\nThe queue limit has been exceeded\n\n"
+              sleep 60
+              break
             end
-          else
-            jobs.each { |job| Thread.new { job_call(job) } if job.time?(Time.now) }
+            if forking
+              begin
+                Process.fork { job_call(job) }
+              rescue Errno::EAGAIN
+                puts "\n\nWait all processes since os cannot create a new one\n\n"
+                Process.waitall
+              end
+            else
+              Thread.new { job_call(job) }
+            end
+            current_queue += 1
           end
-          sleep 0.5
         end
-
-        # If we are here it means we are exiting so we can remove the pid and pending stop.txt
-        FileUtils.rm_f(pid)
-        FileUtils.rm_f(stop_txt)
 
         # Invoke our after :all filters
         after_filters[:all].each { |block| safe_call(block) }
+
+        # If we are here it means we are exiting so we can remove the pid and pending stop.txt
+        FileUtils.rm_rf(tmp)
       end
 
       self
+    end
+
+    ##
+    # Define a new job task
+    #
+    # Example:
+    #   every 1.second, :at => '12:00' do
+    #     my_long_task
+    #   end
+    #
+    def every(period, options={}, &block)
+      jobs << Forever::Job.new(period, options.merge!(:dir => dir), &block)
+    end
+
+    ##
+    # Our job list
+    #
+    def jobs
+      @_jobs ||= []
     end
 
     ##
@@ -123,10 +148,25 @@ module Forever
     end
 
     ##
+    # Queue size
+    #
+    def queue(value=nil)
+      value ? @_queue = value : @_queue
+    end
+
+    ##
     # Base working Directory
     #
     def dir(value=nil)
       value ? @_dir = value : @_dir
+    end
+    alias :workspace :dir
+
+    ##
+    # Temp directory, used to store pids and jobs status
+    #
+    def tmp
+      File.join(dir, 'tmp')
     end
 
     ##
@@ -145,7 +185,7 @@ module Forever
     # Default: dir + 'tmp/[process_name].pid'
     #
     def pid(value=nil)
-      @_pid ||= File.join(dir, "tmp/#{name}.pid") if exists?(dir, file)
+      @_pid ||= File.join(tmp, "#{name}.pid") if exists?(dir, file)
       value.nil? ? @_pid : @_pid = value
     end
 
@@ -156,9 +196,9 @@ module Forever
       FileUtils.rm_f(stop_txt)
       if running?
         pid_was = File.read(pid).to_i
-        FileUtils.rm_f(pid)
         print "[\e[90m%s\e[0m] Killing process \e[1m%d\e[0m...\n" % [name, pid_was]
         after_filters[:all].each { |block| safe_call(block) }
+        FileUtils.rm_rf(tmp)
         Process.kill(:KILL, pid_was)
       else
         print "[\e[90m%s\e[0m] Process with \e[1mnot found\e[0m" % name
@@ -267,9 +307,12 @@ module Forever
 
     def job_call(job)
       return unless job.time?(Time.now)
+      job.run!
       before_filters[:each].each { |block| safe_call(block) }
       safe_call(job)
       after_filters[:each].each { |block| safe_call(block) }
+    ensure
+      job.stop!
     end
 
     def safe_call(block)
@@ -282,7 +325,7 @@ module Forever
     end
 
     def stop_txt
-      @_stop_txt ||= File.join(dir, 'stop.txt')
+      @_stop_txt ||= File.join(tmp, 'stop.txt')
     end
   end # Base
 end # Forever

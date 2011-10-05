@@ -1,6 +1,6 @@
 require 'yaml' unless defined?(YAML)
 require 'forever/extensions'
-require 'forever/every'
+require 'forever/job'
 require 'forever/base'
 require 'forever/version'
 

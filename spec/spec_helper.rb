@@ -28,7 +28,7 @@ class MiniTest::Spec
     if @forever
       capture_io { @forever.stop! }
       FileUtils.rm_rf(File.dirname(@forever.log)) if @forever.log
-      FileUtils.rm_rf(File.dirname(@forever.pid)) if @forever.pid
+      FileUtils.rm_rf(File.dirname(@forever.pid)) if @forever.pid # this is deleted by Forever
     end
     Dir.chdir($dir)
     ARGV.clear

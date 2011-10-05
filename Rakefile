@@ -31,7 +31,8 @@ namespace :example do
     desc "Run example #{name}"
     task name, :fork do |t, args|
       ENV['FORK'] = args[:fork]
-      exec "#{Gem.ruby} #{path} && sleep 3 && tail -f -n 150 #{path}/../log/#{name}.log; #{path} stop"
+      log = File.expand_path("../log/#{name}.log", path)
+      exec "#{Gem.ruby} #{path} && sleep 5 && tail -f -n 150 #{log}; #{path} stop"
     end
   end
 end

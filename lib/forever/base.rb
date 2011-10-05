@@ -17,8 +17,8 @@ module Forever
 
       # Setup directories
       Dir.chdir(dir)
-      FileUtils.rm_rf(tmp) if File.exist?(tmp)
-      Dir.mkdir(tmp)
+      clean_tmp!
+      Dir.mkdir(tmp) unless File.exist?(tmp)
       Dir.mkdir(File.dirname(log)) if log && !File.exist?(File.dirname(log))
 
       write_config!
@@ -79,15 +79,16 @@ module Forever
         @started_at = Time.now
 
         # Invoke our before :all filters
-        before_filters[:all].each { |block| safe_call(block) }
+        filters[:before][:all].each { |block| safe_call(block) }
 
         # Start deamons
         until stopping?
           current_queue = 1
-          jobs.select { |job| job.time?(Time.now) }.each do |job|
-            if queue && queue > current_queue
-              puts "\n\nThe queue limit has been exceeded\n\n"
-              sleep 60
+          jobs.each do |job|
+            next unless job.time?(Time.now)
+            if queue && current_queue > queue
+              puts "\n\nThe queue limit has been exceeded. You are using #{current_queue} of #{queue} slots.\n\n"
+              on_limit_exceeded ? on_limit_exceeded.call : sleep(60)
               break
             end
             if forking
@@ -102,13 +103,14 @@ module Forever
             end
             current_queue += 1
           end
+          sleep 0.5
         end
 
         # Invoke our after :all filters
-        after_filters[:all].each { |block| safe_call(block) }
+        filters[:after][:all].each { |block| safe_call(block) }
 
         # If we are here it means we are exiting so we can remove the pid and pending stop.txt
-        FileUtils.rm_rf(tmp)
+        clean_tmp!
       end
 
       self
@@ -197,8 +199,8 @@ module Forever
       if running?
         pid_was = File.read(pid).to_i
         print "[\e[90m%s\e[0m] Killing process \e[1m%d\e[0m...\n" % [name, pid_was]
-        after_filters[:all].each { |block| safe_call(block) }
-        FileUtils.rm_rf(tmp)
+        filters[:after][:all].each { |block| safe_call(block) }
+        clean_tmp!
         Process.kill(:KILL, pid_was)
       else
         print "[\e[90m%s\e[0m] Process with \e[1mnot found\e[0m" % name
@@ -225,6 +227,13 @@ module Forever
     #
     def on_error(&block)
       block_given? ? @_on_error = block : @_on_error
+    end
+
+    ##
+    # Callback raised when queue limit was exceeded
+    #
+    def on_limit_exceeded(&block)
+      block_given? ? @_on_limit_exceeded = block : @_on_limit_exceeded
     end
 
     ##
@@ -262,32 +271,43 @@ module Forever
       is_running
     end
 
+    ##
+    # Before :all or :each jobs hook
+    #
+    def before(filter, &block)
+      raise "Filter #{filter.inspect} not supported, available options are: :each, :all" unless [:each, :all].include?(filter)
+      filters[:before][filter] << block
+    end
+
+    ##
+    # After :all or :each jobs hook
+    #
+    def after(filter, &block)
+      raise "Filter #{filter.inspect} not supported, available options are: :each, :all" unless [:each, :all].include?(filter)
+      filters[:after][filter] << block
+    end
+
+    ##
+    # Return config of current worker in a hash
+    #
+    def config
+      { :dir => dir, :file => file, :log => log, :pid => pid }
+    end
+
+    ##
+    # Convert forever object in a readable string showing current config
+    #
     def to_s
       "#<Forever dir:#{dir}, file:#{file}, log:#{log}, pid:#{pid} jobs:#{jobs.size}>"
     end
     alias :inspect :to_s
 
-    def config
-      { :dir => dir, :file => file, :log => log, :pid => pid }
-    end
-
-    def before(filter, &block)
-      raise "Filter #{filter.inspect} not supported, available options are: :each, :all" unless [:each, :all].include?(filter)
-      before_filters[filter] << block
-    end
-
-    def after(filter, &block)
-      raise "Filter #{filter.inspect} not supported, available options are: :each, :all" unless [:each, :all].include?(filter)
-      after_filters[filter] << block
-    end
-
   private
-    def before_filters
-      @_before_filters ||= Hash.new { |hash, k| hash[k] = [] }
-    end
-
-    def after_filters
-      @_after_filters ||= Hash.new { |hash, k| hash[k] = [] }
+    def filters
+      @_filters ||= {
+        :before => { :each => [], :all => [] },
+        :after  => { :each => [], :all => [] }
+      }
     end
 
     def stopping?
@@ -308,9 +328,9 @@ module Forever
     def job_call(job)
       return unless job.time?(Time.now)
       job.run!
-      before_filters[:each].each { |block| safe_call(block) }
+      filters[:before][:each].each { |block| safe_call(block) }
       safe_call(job)
-      after_filters[:each].each { |block| safe_call(block) }
+      filters[:after][:each].each { |block| safe_call(block) }
     ensure
       job.stop!
     end
@@ -326,6 +346,12 @@ module Forever
 
     def stop_txt
       @_stop_txt ||= File.join(tmp, 'stop.txt')
+    end
+
+    def clean_tmp!
+      return unless File.exist?(tmp)
+      Dir[File.join(tmp, '*.job')].each { |f| FileUtils.rm_rf(f) }
+      FileUtils.rm_rf(pid)
     end
   end # Base
 end # Forever

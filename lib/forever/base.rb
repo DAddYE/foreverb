@@ -17,7 +17,6 @@ module Forever
 
       # Setup directories
       Dir.chdir(dir)
-      clean_tmp!
       Dir.mkdir(tmp) unless File.exist?(tmp)
       Dir.mkdir(File.dirname(log)) if log && !File.exist?(File.dirname(log))
 
@@ -54,6 +53,8 @@ module Forever
           RUBY
           exit
       end
+
+      clean_tmp!
 
       # Enable REE - http://www.rubyenterpriseedition.com/faq.html#adapt_apps_for_cow
       GC.copy_on_write_friendly = true if GC.respond_to?(:copy_on_write_friendly=)

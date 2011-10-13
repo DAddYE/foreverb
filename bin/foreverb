@@ -38,15 +38,7 @@ class CLI < Thor
   method_option :yes, :type => :boolean, :aliases => "-y", :desc => "Don't ask permission to kill daemon"
   def stop(daemon=nil)
     find(daemon, :multiple => options.all).each do |conf|
-      if options.yes || yes?("Do you want really stop \e[1m#{conf[:file]}\e[0m?")
-        say_status "STOPPING", conf[:file]
-        begin
-          pid = File.read(conf[:pid]).to_i
-          Process.kill(:INT, pid)
-        rescue Exception => e
-          say_status "ERROR", e.message, :red
-        end
-      end
+      stop_daemon(conf) if options.yes || yes?("Do you want really stop \e[1m#{conf[:file]}\e[0m?")
     end
   end
 
@@ -103,6 +95,28 @@ class CLI < Thor
     end
   end
 
+  desc "remove [DAEMON] [--all]", "Remove the config of a daemon from foreverb"
+  method_option :all, :type => :boolean, :aliases => "-a", :desc => "All matching daemons"
+  method_option :yes, :type => :boolean, :aliases => "-y", :desc => "Don't ask permission to remove the daemon"
+  def remove(daemon=nil)
+    say "You must provide a daemon name or provide --all option", :red and return if daemon.nil? && !options.all
+    new_config = config.delete_if do |conf|
+      if conf[:file] =~ /#{daemon}/
+        if options.yes || yes?("Do you really want to remove the daemon \e[1m#{conf[:file]}\e[0m?")
+          stop_daemon(conf)
+          say "\e[1m#{conf[:file]}\e[0m removed."
+          true 
+        else
+          say "\e[1m#{conf[:file]}\e[0m remains on the list."
+          false
+        end
+      else
+        false
+      end
+    end
+    write_config! new_config 
+  end
+
   map "--version" => :version
   desc "version", "show the version number"
   def version
@@ -135,6 +149,20 @@ class CLI < Thor
       result.each { |column| column[1] = "%d Mb" % [column[1].to_i / 1024] }
       result.each { |column| column[2] = "%s %"  % [column[2]] }
       result
+    end
+
+    def write_config!(new_config)
+      File.open(FOREVER_PATH, "w") { |f| f.write new_config.to_yaml }
+    end
+
+    def stop_daemon(conf)
+      say_status "STOPPING", conf[:file]
+      begin
+        pid = File.read(conf[:pid]).to_i
+        Process.kill(:INT, pid)
+      rescue Exception => e
+        say_status "ERROR", e.message, :red
+      end
     end
 end
 

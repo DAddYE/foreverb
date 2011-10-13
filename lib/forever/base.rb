@@ -37,6 +37,10 @@ module Forever
         when 'update'
           print "[\e[90m%s\e[0m] Config written in \e[1m%s\e[0m\n" % [name, FOREVER_PATH]
           exit
+        when 'remove'
+          stop
+          remove
+          exit
         else
           print <<-RUBY.gsub(/ {10}/,'') % name
             Usage: \e[1m./%s\e[0m [start|stop|kill|restart|config|update]
@@ -49,6 +53,7 @@ module Forever
               kill       force stop by sending a KILL signal to the process
               config     show the current daemons config
               update     update the daemon config
+              remove     removes the daemon config
 
           RUBY
           exit
@@ -221,6 +226,16 @@ module Forever
         end
         print " \e[1mDONE\e[0m\n"
       end
+    end
+
+    ##
+    # Remove the daemon from the config file
+    #
+    def remove 
+      print "[\e[90m%s\e[0m] Removed the daemon from the config " % name
+      config_was = File.exist?(FOREVER_PATH) ? YAML.load_file(FOREVER_PATH) : []
+      config_was.delete_if { |conf| conf[:file] == file }
+      File.open(FOREVER_PATH, "w") { |f| f.write config_was.to_yaml }
     end
 
     ##

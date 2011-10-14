@@ -378,49 +378,57 @@ Process.waitall
 
 Use the following script if you want **foreverb** to fire up all of your daemons at boot time in Linux:
 
-  #!/bin/sh
-  ### BEGIN INIT INFO
-  # Provides:          foreverb
-  # Required-Start:    $local_fs $remote_fs
-  # Required-Stop:     $local_fs $remote_fs
-  # Default-Start:     2 3 4 5
-  # Default-Stop:      S 0 1 6
-  # Short-Description: foreverb initscript
-  # Description:       foreverb
-  ### END INIT INFO
-  
-  # Do NOT "set -e"
-  
-  DAEMON="foreverb"
-  USER="username"
-  SCRIPT_NAME="/etc/init.d/foreverb-username"
-  
-  case "$1" in
-    start)
-    su -l $USER -c "$DAEMON start --all --yes"
-    ;;
-    stop)
-    su -l $USER -c "$DAEMON stop --all --yes"
-    ;;
-    restart)
-    su -l $USER -c "$DAEMON restart --all --yes"
-    ;;
-    *)
-    echo "Usage: $SCRIPT_NAME {start|stop|restart}" >&2
-    exit 3
-    ;;
-  esac
-  
-  :
+```#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          foreverb
+# Required-Start:    $local_fs $remote_fs
+# Required-Stop:     $local_fs $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      S 0 1 6
+# Short-Description: foreverb initscript
+# Description:       foreverb
+### END INIT INFO
+
+# Do NOT "set -e"
+
+DAEMON="foreverb"
+USER="username"
+SCRIPT_NAME="/etc/init.d/foreverb-username"
+
+case "$1" in
+  start)
+  su -l $USER -c "$DAEMON start --all --yes"
+  ;;
+  stop)
+  su -l $USER -c "$DAEMON stop --all --yes"
+  ;;
+  restart)
+  su -l $USER -c "$DAEMON restart --all --yes"
+  ;;
+  *)
+  echo "Usage: $SCRIPT_NAME {start|stop|restart}" >&2
+  exit 3
+  ;;
+esac
+
+:
+```
 
 You'll have to create one script per each user foreverb runs on.
 After creating the file, make it executable:
-  chmod +x /etc/init.d/foreverb-username
-  
+```chmod +x /etc/init.d/foreverb-username
+```
 and add it to the system's boot:
-  * RedHat: sudo /sbin/chkconfig --level 345 foreverb-username on
-  * Debian/Ubuntu: sudo /usr/sbin/update-rc.d -f foreverb-username defaults
-  * Gentoo: sudo rc-update add foreverb-username default
+
+* RedHat:
+  ```sudo /sbin/chkconfig --level 345 foreverb-username on
+  ```
+* Debian/Ubuntu:
+  ```sudo /usr/sbin/update-rc.d -f foreverb-username defaults
+  ```
+* Gentoo:
+  ```sudo rc-update add foreverb-username default
+  ```
 
 ## Extras
 

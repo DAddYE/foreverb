@@ -3,6 +3,8 @@
 * Added fork backend
 * Improved queue
 * Added before/after each/all filters
+* Added remove config method from our cli
+* Improved documentation
 
 # Version 0.2.6 - August 27, 2011
 

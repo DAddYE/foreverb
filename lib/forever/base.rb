@@ -13,8 +13,6 @@ module Forever
 
       instance_eval(&block)
 
-      raise 'No jobs defined!' if jobs.empty?
-
       # Setup directories
       Dir.chdir(dir)
       Dir.mkdir(tmp) unless File.exist?(tmp)

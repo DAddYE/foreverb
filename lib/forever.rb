@@ -1,4 +1,4 @@
-require 'yaml' unless defined?(YAML)
+require 'yaml'
 require 'forever/extensions'
 require 'forever/job'
 require 'forever/base'

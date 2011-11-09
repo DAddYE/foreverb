@@ -329,7 +329,7 @@ module Forever
     end
 
     def write_config!
-      config_was = File.exist?(FOREVER_PATH) ? YAML.load_file(FOREVER_PATH) : []
+      config_was = File.exist?(FOREVER_PATH) ? YAML.load_file(FOREVER_PATH) : [{}]
       config_was.delete_if { |conf| conf[:file] == file }
       config_was << config
       File.open(FOREVER_PATH, "w") { |f| f.write config_was.to_yaml }

@@ -1,3 +1,3 @@
 module Forever
-  VERSION = "0.3.0.f" unless defined?(Forever::VERSION)
+  VERSION = "0.3.0.g" unless defined?(Forever::VERSION)
 end

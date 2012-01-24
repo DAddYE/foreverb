@@ -85,19 +85,24 @@ module Forever
         # Invoke our before :all filters
         filters[:before][:all].each { |block| safe_call(block) }
 
+        # Store pids of childs
+        pids = []
+
         # Start deamons
         until stopping?
           current_queue = 1
+
           jobs.each do |job|
             next unless job.time?(Time.now)
             if queue && current_queue > queue
-              puts "\n\nThe queue limit has been exceeded. You are using #{current_queue} of #{queue} slots.\n\n"
+              puts "\n\nThe queue limit of #{queue} has been exceeded.\n\n"
               on_limit_exceeded ? on_limit_exceeded.call : sleep(60)
               break
             end
             if forking
               begin
-                Process.fork { job_call(job) }
+                GC.start
+                pids << Process.fork { job_call(job) }
               rescue Errno::EAGAIN
                 puts "\n\nWait all processes since os cannot create a new one\n\n"
                 Process.waitall
@@ -107,6 +112,17 @@ module Forever
             end
             current_queue += 1
           end
+
+          # Detach zombies, our ps will be happier
+          pids.each do |p|
+            begin
+              Process.getpgid(p)
+            rescue Errno::ESRCH
+              pids.delete(p)
+              Process.detach(p)
+            end
+          end
+
           sleep 0.5
         end
 
@@ -229,7 +245,7 @@ module Forever
     ##
     # Remove the daemon from the config file
     #
-    def remove 
+    def remove
       print "[\e[90m%s\e[0m] Removed the daemon from the config " % name
       config_was = File.exist?(FOREVER_PATH) ? YAML.load_file(FOREVER_PATH) : []
       config_was.delete_if { |conf| conf[:file] == file }

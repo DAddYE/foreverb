@@ -102,7 +102,7 @@ module Forever
             if forking
               begin
                 GC.start
-                pids << Process.fork { job_call(job) }
+                pids << fork { job_call(job) }
               rescue Errno::EAGAIN
                 puts "\n\nWait all processes since os cannot create a new one\n\n"
                 Process.waitall
@@ -113,17 +113,17 @@ module Forever
             current_queue += 1
           end
 
-          # Detach zombies, our ps will be happier
-          pids.each do |p|
-            begin
-              Process.getpgid(p)
-            rescue Errno::ESRCH
-              pids.delete(p)
-              Process.detach(p)
-            end
-          end
-
           sleep 0.5
+        end
+
+        # Detach zombies, our ps will be happier
+        pids.each do |p|
+          begin
+            pids << Process.getpgid(p)
+          rescue Errno::ESRCH
+            pids.delete(p)
+            Process.detach(p)
+          end
         end
 
         # Invoke our after :all filters
@@ -346,7 +346,7 @@ module Forever
 
     def write_config!
       config_was = File.exist?(FOREVER_PATH) ? YAML.load_file(FOREVER_PATH) : []
-      config_was.delete_if { |conf| conf[:file] == file }
+      config_was.delete_if { |conf| conf.nil? || conf.empty? || conf[:file] == file }
       config_was << config
       File.open(FOREVER_PATH, "w") { |f| f.write config_was.to_yaml }
     end

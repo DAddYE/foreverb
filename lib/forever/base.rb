@@ -102,7 +102,7 @@ module Forever
             if forking
               begin
                 GC.start
-                pids << fork { job_call(job) }
+                pids << fork { job_call(job); exec('test') }
               rescue Errno::EAGAIN
                 puts "\n\nWait all processes since os cannot create a new one\n\n"
                 Process.waitall

@@ -63,6 +63,8 @@ module Forever
       GC.copy_on_write_friendly = true if GC.respond_to?(:copy_on_write_friendly=)
 
       fork do
+        Process.setsid
+
         $0 = "Forever: #{$0}"
         print "[\e[90m%s\e[0m] Process demonized with pid \e[1m%d\e[0m with \e[1m%s\e[0m and Forever v.%s\n" %
           [name, Process.pid, forking ? :fork : :thread, Forever::VERSION]
@@ -102,7 +104,7 @@ module Forever
             if forking
               begin
                 GC.start
-                pids << fork { job_call(job); exec('test') }
+                pids << fork { job_call(job) }
               rescue Errno::EAGAIN
                 puts "\n\nWait all processes since os cannot create a new one\n\n"
                 Process.waitall
@@ -113,18 +115,12 @@ module Forever
             current_queue += 1
           end
 
+          # Detach zombies, our ps will be happier
+          pids.delete_if { |p| Process.detach(p).stop? }
+
           sleep 0.5
         end
 
-        # Detach zombies, our ps will be happier
-        pids.each do |p|
-          begin
-            pids << Process.getpgid(p)
-          rescue Errno::ESRCH
-            pids.delete(p)
-            Process.detach(p)
-          end
-        end
 
         # Invoke our after :all filters
         filters[:after][:all].each { |block| safe_call(block) }
@@ -288,7 +284,7 @@ module Forever
         current = File.read(pid).to_i
         print "[\e[90m%s\e[0m] Found pid \e[1m%d\e[0m...\n" % [name, current] unless silent
       else
-        print "[\e[90m%s\e[0m] Pid \e[1mnot found\e[0m, process seems don't exist!\n" % name unless silent
+        print "[\e[90m%s\e[0m] Pid \e[1mnot found\e[0m, process seems doesn't exist!\n" % name unless silent
         return false
       end
 

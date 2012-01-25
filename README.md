@@ -174,7 +174,7 @@ $ examples/sample; tail -f -n 150 examples/log/sample.log; examples/sample stop
 you should see:
 
 ```
-=> Pid not found, process seems don't exist!
+=> Pid not found, process seems doesn't exist!
 => Process demonized with pid 11509 with Forever v.0.2.0
 [14/07 15:46:56] All jobs will will wait me for 1 second
 [14/07 15:46:57] Every 10 second
@@ -370,6 +370,7 @@ This is similar to create a new process i.e.:
 Process.fork do
   require '/config/boot'
   my_long_jobs
+  Project.all(&:perform_long_task)
 end
 Process.waitall
 ```

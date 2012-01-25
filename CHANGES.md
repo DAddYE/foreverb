@@ -1,10 +1,13 @@
-# Version 0.3.0 - October 4, 2011
+# Version 0.3.0 - January 25, 2012
 
 * Added fork backend
 * Improved queue
 * Added before/after each/all filters
 * Added remove config method from our cli
 * Improved documentation
+* Remove zombies processes
+* Back to yaml psyck
+* Fix yaml config writer/reader
 
 # Version 0.2.6 - August 27, 2011
 
@@ -32,4 +35,4 @@
 * Added `restart` CLI command
 * Added `tail` CLI command
 * Added `update` CLI command (useful to update daemons config)
-* Improved documentation (aka the readme)
+* Improved documentation

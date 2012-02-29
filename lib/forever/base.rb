@@ -26,6 +26,9 @@ module Forever
           exit
         when 'start', 'restart', 'up', nil
           stop
+        when 'run'
+          detach = false
+          stop
         when 'stop'
           stop
           exit
@@ -62,12 +65,12 @@ module Forever
       # Enable REE - http://www.rubyenterpriseedition.com/faq.html#adapt_apps_for_cow
       GC.copy_on_write_friendly = true if GC.respond_to?(:copy_on_write_friendly=)
 
-      fork do
-        Process.setsid
+      maybe_fork(detach) do
+        Process.setsid if detach != false
 
         $0 = "Forever: #{$0}"
-        print "[\e[90m%s\e[0m] Process demonized with pid \e[1m%d\e[0m with \e[1m%s\e[0m and Forever v.%s\n" %
-          [name, Process.pid, forking ? :fork : :thread, Forever::VERSION]
+        print "[\e[90m%s\e[0m] Process %s with pid \e[1m%d\e[0m with \e[1m%s\e[0m and Forever v.%s\n" %
+          [name, detach != false ? :daemonized : :running, Process.pid, forking ? :fork : :thread, Forever::VERSION]
 
         %w(INT TERM KILL).each { |signal| trap(signal)  { stop! } }
         trap(:HUP) do
@@ -340,6 +343,14 @@ module Forever
       File.exist?(stop_txt) && File.mtime(stop_txt) > started_at
     end
 
+    def maybe_fork(detach,&block)
+      if detach != false
+        fork &block
+      else
+        yield
+      end
+    end
+    
     def write_config!
       config_was = File.exist?(FOREVER_PATH) ? YAML.load_file(FOREVER_PATH) : []
       config_was.delete_if { |conf| conf.nil? || conf.empty? || conf[:file] == file }

@@ -127,7 +127,7 @@ Forever.run do
   dir File.expand_path('../', __FILE__) # Default is ../../__FILE__
 
   before :all do
-    puts "All jobs will will wait me for 1 second"; sleep 1
+    puts "All jobs will wait me for 1 second"; sleep 1
   end
 
   every 10.seconds, :at => "#{Time.now.hour}:00" do

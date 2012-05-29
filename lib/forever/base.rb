@@ -68,7 +68,7 @@ module Forever
       maybe_fork(detach) do
         Process.setsid if detach != false
 
-        $0 = "Forever: #{$0}"
+        $0 = "Forever: #{$0}" unless ENV['DONT_TOUCH_PS']
         print "[\e[90m%s\e[0m] Process %s with pid \e[1m%d\e[0m with \e[1m%s\e[0m and Forever v.%s\n" %
           [name, detach != false ? :daemonized : :running, Process.pid, forking ? :fork : :thread, Forever::VERSION]
 

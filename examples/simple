@@ -3,16 +3,25 @@ require 'rubygems' unless defined?(Gem)
 require 'bundler/setup'
 require 'forever'
 
-Forever.run :fork => ENV['FORK'] do
+Forever.run :fork => !!ENV['FORK'] do
   dir File.expand_path('../', __FILE__) # Default is ../../__FILE__
-  queue 2
+  log File.join(dir, "#{name}.log")
+  pid File.join(dir, "#{name}.pid")
 
-  before :each do
+  before :all do
     puts 'before all'
   end
 
-  after :each do
+  before :each do
+    puts 'before each'
+  end
+
+  after :all do
     puts 'after all'
+  end
+
+  after :each do
+    puts 'after each'
   end
 
   every 1.seconds do
@@ -24,8 +33,18 @@ Forever.run :fork => ENV['FORK'] do
     puts 'every 2 seconds'
   end
 
+  every 10.seconds do
+    raise 'Arg....'
+  end
+
   on_ready do
     puts "All jobs will will wait me for 1 second"; sleep 1
+  end
+
+  on_error do |e|
+    puts '-' * 30
+    puts e
+    puts '-' * 30
   end
 
   on_exit do

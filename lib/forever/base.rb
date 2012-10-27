@@ -27,7 +27,7 @@ module Forever
           exit
         when 'start', 'restart', 'up', nil
           stop
-        when 'run'
+        when 'run', 'live'
           detach = false
           stop
         when 'stop'
@@ -50,6 +50,7 @@ module Forever
             Commands:
 
               start      stop (if present) the daemon and perform a start
+              live       run in no-deamon mode
               stop       stop the daemon if a during when it is idle
               restart    same as start
               kill       force stop by sending a KILL signal to the process
@@ -332,7 +333,8 @@ module Forever
     end
     alias :inspect :to_s
 
-  private
+    private
+
     def filters
       @_filters ||= {
         :before => { :each => [], :all => [] },
@@ -351,7 +353,7 @@ module Forever
         yield
       end
     end
-    
+
     def write_config!
       config_was = File.exist?(FOREVER_PATH) ? YAML.load_file(FOREVER_PATH) : []
       config_was.delete_if { |conf| conf.nil? || conf.empty? || conf[:file] == file }

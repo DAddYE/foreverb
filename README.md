@@ -417,19 +417,23 @@ esac
 
 You'll have to create one script per each user foreverb runs on.
 After creating the file, make it executable:
-```chmod +x /etc/init.d/foreverb-username
-```
+
+    chmod +x /etc/init.d/foreverb-username
+
 and add it to the system's boot:
 
 * RedHat:
   ```sudo /sbin/chkconfig --level 345 foreverb-username on
   ```
+
 * Debian/Ubuntu:
   ```sudo /usr/sbin/update-rc.d -f foreverb-username defaults
   ```
+
 * Gentoo:
   ```sudo rc-update add foreverb-username default
   ```
+
 
 ## Extras
 

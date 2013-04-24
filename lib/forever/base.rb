@@ -109,7 +109,7 @@ module Forever
             if forking
               begin
                 GC.start
-                pids << fork { job_call(job) }
+                pids << Process.detach(fork { job_call(job) })
               rescue Errno::EAGAIN
                 puts "\n\nWait all processes since os cannot create a new one\n\n"
                 Process.waitall
@@ -121,7 +121,7 @@ module Forever
           end
 
           # Detach zombies, our ps will be happier
-          pids.delete_if { |p| Process.detach(p).stop? }
+          pids.delete_if { |p| p.stop? }
 
           sleep 0.5
         end

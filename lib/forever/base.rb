@@ -74,7 +74,7 @@ module Forever
         print "[\e[90m%s\e[0m] Process %s with pid \e[1m%d\e[0m with \e[1m%s\e[0m and Forever v.%s\n" %
           [name, detach != false ? :daemonized : :running, Process.pid, forking ? :fork : :thread, Forever::VERSION]
 
-        %w(INT TERM KILL).each { |signal| trap(signal)  { stop! } }
+        %w(INT TERM).each { |signal| trap(signal)  { stop! } }
         trap(:HUP) do
           IO.open(1, 'w'){ |s| s.puts config }
         end

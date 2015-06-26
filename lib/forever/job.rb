@@ -42,6 +42,7 @@ module Forever
         raise "#{at} must be a string" unless at.is_a?(String)
         raise "#{at} has not a colon separator" unless at =~ /:/
         hour, min = at.split(":")
+        min = '' if min.nil?
         raise "Failed to parse #{at}" if hour.to_i >= 24 || min.to_i >= 60
         [hour, min]
       end

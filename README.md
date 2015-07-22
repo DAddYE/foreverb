@@ -423,15 +423,18 @@ After creating the file, make it executable:
 and add it to the system's boot:
 
 * RedHat:
-  ```sudo /sbin/chkconfig --level 345 foreverb-username on
+  ```
+  sudo /sbin/chkconfig --level 345 foreverb-username on
   ```
 
 * Debian/Ubuntu:
-  ```sudo /usr/sbin/update-rc.d -f foreverb-username defaults
+  ```
+  sudo /usr/sbin/update-rc.d -f foreverb-username defaults
   ```
 
 * Gentoo:
-  ```sudo rc-update add foreverb-username default
+  ```
+  sudo rc-update add foreverb-username default
   ```
 
 

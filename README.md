@@ -33,9 +33,11 @@ $ gem install foreverb
 
 ## Deamon Example:
 
-Place your script under your standard directory, generally on my env is _bin_ or _scripts_.
+Place the below script in your project directory, wherever you usually keep your Ruby scripts. Generally on my env this is _bin_ or _scripts_.
 
-In that case is: ```bin/foo```
+In the former case you'll end up with: ```bin/foo```
+
+With ```foo``` being whatever you've decided to name your script.
 
 ``` rb
 #!/usr/bin/ruby
